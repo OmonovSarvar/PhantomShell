@@ -1,0 +1,40 @@
+version: '3.8'
+
+# PhantomShell Test Lab
+# Usage: docker compose up -d
+# Then: docker exec -it phantom-target bash
+
+services:
+  target:
+    image: php:8.2-cli
+    container_name: phantom-target
+    volumes:
+      - ../phantom.php:/opt/phantom.php:ro
+      - ../loader.php:/opt/loader.php:ro
+      - ../modules:/opt/modules:ro
+    working_dir: /opt
+    command: ["php", "-S", "0.0.0.0:8080"]
+    ports:
+      - "8080:8080"
+    networks:
+      - phantom-net
+
+  attacker:
+    image: php:8.2-cli
+    container_name: phantom-attacker
+    volumes:
+      - ..:/opt/PhantomShell:ro
+    working_dir: /opt/PhantomShell
+    command: ["sleep", "infinity"]
+    ports:
+      - "4444:4444"
+      - "8888:8888"
+    networks:
+      - phantom-net
+
+networks:
+  phantom-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24

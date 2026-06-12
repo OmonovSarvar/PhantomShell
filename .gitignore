@@ -1,0 +1,16 @@
+*.log
+*.tmp
+*.swp
+*.swo
+*~
+.DS_Store
+.env
+.idea/
+.vscode/
+__pycache__/
+*.pyc
+node_modules/
+vendor/
+composer.lock
+.php_cs.cache
+.phpunit.result.cache
