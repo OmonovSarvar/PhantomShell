@@ -1,6 +1,6 @@
 {
-  "version": "5.0",
-  "description": "PhantomShell v5.0 — Unified Command Registry. Single source of truth for help system, tab completion, and argument validation.",
+  "version": "5.2",
+  "description": "PhantomShell v5.2 — Unified Command Registry. Single source of truth for help system, tab completion, and argument validation.",
   "commands": {
 
     "help": {

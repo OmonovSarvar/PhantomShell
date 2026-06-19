@@ -12,6 +12,6 @@ $config = array(
     'enable_colors'   => true,
     'enable_history'  => true,
     'enable_tab'      => true,
-    'version'         => '4.0',
+    'version'         => '5.2',
 );
 ?>

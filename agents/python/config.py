@@ -12,5 +12,5 @@ DEFAULT_CONFIG = {
         "recon", "fileops", "privesc", "persist",
         "lateral", "stealing", "pivoting", "evasion",
     ],
-    "agent_version": "5.0",
+    "agent_version": "5.2",
 }

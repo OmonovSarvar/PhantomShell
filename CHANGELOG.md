@@ -1,5 +1,52 @@
 # Changelog
 
+## [5.2.0] - 2026-06-19
+
+### Added — Phase 2: Windows + Active Directory
+- C# Windows agent (.NET 8) with TCP/HTTP transport, AES-256-GCM encryption
+- C# Windows post-exploitation: token manipulation, credential dumping, UAC bypass (FodHelper/CMSTP/ComputerDefaults/EventViewer), AMSI/ETW bypass, registry/service control
+- PowerShell agent with in-memory execution, AMSI bypass, module loading
+- Active Directory attacks across Python, C#, PowerShell:
+  - Domain enumeration (users, computers, groups, trusts, GPOs)
+  - Kerberoasting (hashcat-ready TGS output)
+  - AS-REP Roasting (hashcat-ready AS-REP output)
+  - ACL/DACL abuse scanner (WriteDACL, GenericAll, ForceChangePassword chains)
+  - RBCD abuse (write msDS-AllowedToActOnBehalfOfOtherIdentity)
+  - Delegation enumeration (unconstrained, constrained, RBCD)
+  - ADCS vulnerability scanner (ESC1-ESC8)
+  - LAPS password retrieval (v1 + v2)
+  - Shadow Credentials (msDS-KeyCredentialLink)
+  - gMSA password extraction
+  - Domain trust enumeration
+  - Password policy + spray
+- PowerShell lateral movement: WMI, PSRemoting, SMB, DCOM, WinRM
+- PowerShell persistence: registry, scheduled tasks, WMI subscriptions, COM hijack, services
+- PowerShell credential dumping: SAM, DPAPI, Credential Manager, cached credentials
+
+### Changed
+- Version bumped to 5.2 across all agents
+- README updated with multi-language badges and new description
+
+## [5.0.0] - 2026-06-19
+
+### Added — Phase 1: Multi-Language Foundation
+- JSON wire protocol with 4-byte length-prefix framing
+- Python agent with modular architecture (transport, crypto, core, modules)
+- AES-256-GCM encryption with ECDH X25519 key exchange
+- HMAC-SHA256 agent authentication (PSK-based)
+- TCP transport with retry logic and reconnection
+- HTTP(S) transport with User-Agent rotation, URL jitter, TLS support
+- C2 server with TCP + HTTP listeners, session management, interactive CLI
+- Python privesc module: 220+ GTFOBins with exploit/sudo commands, kernel CVE scanner
+- Python credential parser: 10+ config formats (env, wp-config, database.yml, django, pgpass, etc.)
+- PHP agent dual-mode: JSON C2 protocol + plaintext nc fallback
+- Unified command registry (proto/commands.json) for help, tab completion, validation
+- Monorepo structure: agents/python, agents/php, agents/csharp, agents/powershell, c2/
+
+### Changed
+- PHP agent upgraded from v4.0 to v5.0 with JSON wire protocol support
+- Hardcoded IPs replaced with placeholders across entire codebase
+
 ## [4.0.0] - 2026-06-12
 
 ### Added
