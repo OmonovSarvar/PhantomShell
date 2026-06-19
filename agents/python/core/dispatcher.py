@@ -34,8 +34,8 @@ class Dispatcher:
             handler = self._commands[command]["handler"]
             result = handler(**(args or {}))
             if isinstance(result, dict):
-                return {"status": "success", "data": result}
-            return {"status": "success", "output": str(result)}
+                return {"status": "ok", "data": result}
+            return {"status": "ok", "output": str(result)}
         except TypeError as e:
             return {"status": "error", "error_code": 2, "output": f"Invalid arguments: {e}"}
         except PermissionError as e:

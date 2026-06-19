@@ -8,6 +8,7 @@ import sys
 import time
 
 from listeners.tcp_listener import TcpListener
+from listeners.http_listener import HttpListener
 from handlers.session import SessionManager
 
 logging.basicConfig(
@@ -34,7 +35,7 @@ class PhantomC2(cmd.Cmd):
     def __init__(self):
         super().__init__()
         self.sessions = SessionManager()
-        self.listeners: dict[str, TcpListener] = {}
+        self.listeners: dict[str, TcpListener | HttpListener] = {}
         self._interacting: str | None = None
 
     def preloop(self):
@@ -57,6 +58,39 @@ class PhantomC2(cmd.Cmd):
         listener.start()
         self.listeners[key] = listener
         print(f"[+] TCP listener started on {key}")
+
+    def do_listen_http(self, args):
+        """Start an HTTP listener: listen_http [port] [host] [--tls certfile keyfile]"""
+        parts = args.split()
+        port = int(parts[0]) if parts else 8443
+        host = parts[1] if len(parts) > 1 and not parts[1].startswith("--") else "0.0.0.0"
+
+        use_tls = False
+        certfile = None
+        keyfile = None
+        if "--tls" in parts:
+            idx = parts.index("--tls")
+            use_tls = True
+            if idx + 2 < len(parts):
+                certfile = parts[idx + 1]
+                keyfile = parts[idx + 2]
+            else:
+                print("[-] --tls requires certfile and keyfile")
+                return
+
+        key = f"http://{host}:{port}"
+        if key in self.listeners:
+            print(f"[-] Listener already running on {key}")
+            return
+
+        listener = HttpListener(
+            host=host, port=port, session_manager=self.sessions,
+            use_tls=use_tls, certfile=certfile, keyfile=keyfile,
+        )
+        listener.start()
+        self.listeners[key] = listener
+        proto = "HTTPS" if use_tls else "HTTP"
+        print(f"[+] {proto} listener started on {host}:{port}")
 
     def do_listeners(self, _):
         """List active listeners"""

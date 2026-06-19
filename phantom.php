@@ -16,7 +16,7 @@ if(defined('PHP_MAJOR_VERSION')&&PHP_MAJOR_VERSION==5&&PHP_MINOR_VERSION<4){
 // =============================================
 // 1. CONFIG
 // =============================================
-$CFG=array('host'=>'10.13.5.162','port'=>4444,'http_port'=>8888,
+$CFG=array('host'=>'0.0.0.0','port'=>4444,'http_port'=>8888,
     'reconnect'=>5,'timeout'=>30,'hist_file'=>'/tmp/.ph_'.substr(md5(__FILE__),0,8),
     'hist_max'=>500,'version'=>'4.0','mode'=>'FULL');
 $G=array('sock'=>null,'history'=>array(),'hist_idx'=>0,'jobs'=>array(),'job_cnt'=>0,'caps'=>array());

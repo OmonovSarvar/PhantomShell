@@ -1,11 +1,16 @@
 """TCP listener — accepts agent connections and manages sessions."""
 
+import hashlib
+import hmac
 import json
 import logging
+import os
 import socket
 import struct
 import threading
 import uuid
+
+PSK = os.environ.get("PS_AUTH_KEY", "phantomshell-default-key")
 
 log = logging.getLogger("phantom.c2.tcp")
 
@@ -64,6 +69,25 @@ class TcpListener:
             if msg.get("type") == "register":
                 session_id = f"sess-{uuid.uuid4().hex[:8]}"
                 agent_id = msg.get("agent_id", "unknown")
+
+                # HMAC-SHA256 agent authentication — reject unverified agents
+                expected_auth = hmac.new(PSK.encode(), agent_id.encode(), hashlib.sha256).hexdigest()
+                if msg.get("auth") != expected_auth:
+                    reject_ack = {
+                        "message_id": str(uuid.uuid4()),
+                        "timestamp": int(__import__("time").time()),
+                        "sequence": 0,
+                        "agent_id": agent_id,
+                        "type": "ack",
+                        "payload": {
+                            "session_id": session_id,
+                            "status": "rejected",
+                        },
+                    }
+                    self._send_message(client, reject_ack)
+                    client.close()
+                    log.warning(f"[-] Agent auth failed for {agent_id} from {addr}")
+                    return
 
                 if self.session_manager:
                     self.session_manager.register(

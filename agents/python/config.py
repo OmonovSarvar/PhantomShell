@@ -1,5 +1,5 @@
 DEFAULT_CONFIG = {
-    "c2_host": "10.13.5.162",
+    "c2_host": "0.0.0.0",
     "c2_port": 4444,
     "transport": "tcp",
     "encryption": True,

