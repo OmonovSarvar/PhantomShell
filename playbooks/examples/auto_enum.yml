@@ -1,0 +1,69 @@
+name: auto_enum
+description: Full system enumeration — recon, network, privilege escalation vectors
+author: PhantomShell
+version: "5.2"
+
+steps:
+  - name: System Info
+    command: sysinfo
+    store: sysinfo
+
+  - name: Network Interfaces
+    command: shell
+    args:
+      cmd: "ip -4 addr show 2>/dev/null || ipconfig"
+    store: interfaces
+
+  - name: Listening Ports
+    command: shell
+    args:
+      cmd: "ss -tlnp 2>/dev/null || netstat -tlnp 2>/dev/null"
+    store: ports
+
+  - name: ARP Table
+    command: shell
+    args:
+      cmd: "arp -a 2>/dev/null || ip neigh show 2>/dev/null"
+    store: arp
+
+  - name: Routing Table
+    command: shell
+    args:
+      cmd: "ip route show 2>/dev/null || route print 2>/dev/null"
+    store: routes
+
+  - name: Privilege Escalation Check
+    command: privesc_check
+    store: privesc
+
+  - name: SUID Binaries
+    command: shell
+    args:
+      cmd: "find / -perm -4000 -type f 2>/dev/null"
+    store: suids
+
+  - name: Sudo Permissions
+    command: shell
+    args:
+      cmd: "sudo -n -l 2>&1"
+    store: sudo
+    fail_fast: false
+
+  - name: Cron Jobs
+    command: shell
+    args:
+      cmd: "cat /etc/crontab 2>/dev/null; ls -la /etc/cron.d/ 2>/dev/null; crontab -l 2>/dev/null"
+    store: crons
+
+  - name: Interesting Files
+    command: shell
+    args:
+      cmd: "find / -name '*.conf' -o -name '*.config' -o -name '*.bak' -o -name '*.old' 2>/dev/null | head -50"
+    store: files
+
+  - name: Docker Check
+    command: shell
+    args:
+      cmd: "id | grep -i docker; docker ps 2>/dev/null; ls -la /var/run/docker.sock 2>/dev/null"
+    store: docker
+    fail_fast: false

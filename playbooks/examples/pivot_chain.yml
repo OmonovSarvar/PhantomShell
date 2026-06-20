@@ -1,0 +1,64 @@
+name: pivot_chain
+description: Network discovery and pivoting setup for internal network access
+author: PhantomShell
+version: "5.2"
+
+steps:
+  - name: Identify Network Segments
+    command: shell
+    args:
+      cmd: "ip -4 addr show | grep inet | awk '{print $2}'"
+    store: subnets
+
+  - name: ARP Discovery
+    command: shell
+    args:
+      cmd: "arp -a 2>/dev/null || ip neigh show 2>/dev/null"
+    store: arp_table
+
+  - name: Gateway Discovery
+    command: shell
+    args:
+      cmd: "ip route | grep default | awk '{print $3}'"
+    store: gateway
+
+  - name: Quick Scan Gateway Subnet
+    command: shell
+    args:
+      cmd: "for i in $(seq 1 254); do (ping -c 1 -W 1 {{ gateway%.*}}.$i 2>/dev/null | grep 'bytes from' &); done; wait"
+    store: alive_hosts
+    timeout: 60
+
+  - name: Scan Common Ports on Discovered Hosts
+    command: portscan
+    args:
+      host: "{{ gateway }}"
+      ports: "22,80,443,445,3389,5985,8080,8443"
+    store: port_scan
+    fail_fast: false
+
+  - name: Check for SSH Keys
+    command: shell
+    args:
+      cmd: "find / -name 'id_rsa' -o -name 'id_ed25519' 2>/dev/null | head -5"
+    store: ssh_keys
+
+  - name: Check Known Hosts
+    command: shell
+    args:
+      cmd: "cat ~/.ssh/known_hosts 2>/dev/null | awk '{print $1}' | sort -u"
+    store: known_hosts
+
+  - name: Start SOCKS5 Proxy
+    command: socks5
+    args:
+      port: 1080
+    store: socks_proxy
+    fail_fast: false
+
+  - name: Check Docker Networks
+    command: shell
+    args:
+      cmd: "docker network ls 2>/dev/null; docker inspect bridge 2>/dev/null | grep -A5 'Subnet'"
+    store: docker_nets
+    fail_fast: false
