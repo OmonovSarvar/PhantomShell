@@ -180,7 +180,7 @@
         "kernel": "5.15.0-91-generic",
         "arch": "x64",
         "agent_type": "python",
-        "agent_version": "5.0",
+        "agent_version": "5.2",
         "pid": 1337,
         "ppid": 1,
         "integrity": "low",

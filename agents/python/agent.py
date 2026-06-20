@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""PhantomShell v5.0 — Python Agent"""
+"""PhantomShell v5.2 — Python Agent"""
 
 import argparse
 import hashlib
